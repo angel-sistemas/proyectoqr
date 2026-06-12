@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<h2 style="color: #003366; margin-bottom: 20px;">Gestión de Usuarios</h2>
+
+<div style="margin-bottom: 20px;">
+    <a href="/usuarios/nuevo" 
+       style="background-color: #003366; color: white; padding: 10px 20px;
+              border-radius: 5px; text-decoration: none; font-size: 14px;">
+        + Nuevo Usuario
+    </a>
+</div>
+
+<div style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse;
+                  background: white; border-radius: 8px;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <thead>
+            <tr style="background-color: #003366; color: white;">
+                <th style="padding: 12px 15px; text-align: left;">Nombre</th>
+                <th style="padding: 12px 15px; text-align: left;">Email</th>
+                <th style="padding: 12px 15px; text-align: left;">Rol</th>
+                <th style="padding: 12px 15px; text-align: left;">Estado</th>
+                <th style="padding: 12px 15px; text-align: left;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px 15px;">{{ usuario.nombre }}</td>
+                <td style="padding: 12px 15px;">{{ usuario.email }}</td>
+                <td style="padding: 12px 15px;">{{ usuario.rol_nombre }}</td>
+                <td style="padding: 12px 15px;">
+                    {% if usuario.activo %}
+                        <span style="color: green;">Activo</span>
+                    {% else %}
+                        <span style="color: red;">Inactivo</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 15px;">
+                    <a href="/usuarios/editar/{{ usuario.id }}"
+                       style="color: #003366; text-decoration: none; margin-right: 10px;">Editar</a>
+                    <a href="/usuarios/eliminar/{{ usuario.id }}"
+                       style="color: #cc0000; text-decoration: none;"
+                       onclick="return confirm('¿Estás seguro de eliminar este usuario?')">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

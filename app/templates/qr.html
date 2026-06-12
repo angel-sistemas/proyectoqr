@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <a href="/equipo/{{ equipo.serial }}"
+       style="color: #003366; text-decoration: none; font-size: 14px;">
+       Volver al equipo
+    </a>
+
+    <h2 style="color: #003366; margin: 20px 0;">Código QR - {{ equipo.serial }}</h2>
+
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+
+        <!--QR COMPLETO-->
+        <div style="background: white; border-radius: 10px; padding: 25px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; flex: 1;">
+            <h3 style="color: #003366; margin-bottom: 15px;">QR Completo</h3>
+            <img src="/static/qr/completo_{{ equipo.serial }}.png"
+                 style="width: 180px; height: 180px;">
+            <p style="color: #555; font-size: 12px; margin-top: 10px;">
+                Muestra el rotulo completo del equipo
+            </p>
+            <a href="/static/qr/completo_{{ equipo.serial }}.png" download 
+               style="display: inline-block; margin-top: 10px; background-color: #003366;
+               color: white; padding: 8px 20px; border-radius: 5px;
+               text-decoration: none; font-size: 13px;">
+               Descargar
+            </a>
+        </div>
+
+        <!--QR SERIAL-->
+        <div style="background: white; border-radius: 10px; padding: 25px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; flex: 1;">
+            <h3 style="color: #003366; margin-bottom: 15px;">QR Serial</h3>
+            <img src="/static/qr/serial_{{ equipo.serial }}.png"
+                 style="width: 180px; height: 180px;">
+            <p style="color: #555; font-size: 12px; margin-top: 10px;">
+                Muestra unicamente el serial del equipo
+            </p>
+            <a href="/static/qr/serial_{{ equipo.serial }}.png" download 
+               style="display: inline-block; margin-top: 10px; background-color: #003366;
+               color: white; padding: 8px 20px; border-radius: 5px;
+               text-decoration: none; font-size: 13px;">
+               Descargar
+            </a>
+        </div>
+    </div>
+
+    <!--INFORMACION DEL EQUIPO-->
+    <div style="background: white; border-radius: 10px; padding: 25px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; flex: 1;">
+        <p style="color: #555; font-size: 13px;">
+            <strong style="color:#003366;">Equipo:</strong> {{ equipo.descripcion }}
+        </p>
+        <p style="color: #555; font-size: 13px;">
+            <strong style="color:#003366;">Marca:</strong> {{ equipo.marca }}
+        </p>
+        <p style="color: #555; font-size: 13px;">
+            <strong style="color:#003366;">Bodega:</strong> {{ equipo.bodega }}
+        </p>
+    </div>
+</div>
+{% endblock %}

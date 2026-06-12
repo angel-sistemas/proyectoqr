@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<h2 style="color: #003366; margin-bottom: 20px;">Importar Excel</h2>
+
+<div style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; box-shadow: 0 2xp 8xp rgba(0,0,0,0.1);">
+    <p style="margin-bottom: 20px; color: #555;">
+        Selecciona el archivo Excel exportado del sistema para actualizar el inventario.
+    </p>
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="archivo" accept=".xlsx"
+        style="margin-bottom: 20px; width: 100%;">
+
+        <button type="submit"
+        style="background-color: #003366; color: white; padding: 10px 25px; border: none;
+        border-radius: 5px; cursor: pointer; font-size: 15px;">
+        Importar
+        </button>
+    </form>
+</div>
+{% endblock %}

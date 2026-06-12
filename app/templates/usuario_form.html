@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<h2 style="color: #003366; margin-bottom: 20px;">
+    {% if usuario %}Editar Usuario{% else %}Nuevo Usuario{% endif %}
+</h2>
+
+<div style="background: white; border-radius: 10px; padding: 30px;
+            max-width: 500px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+    <form method="POST">
+        <label style="display: block; color: #003366; font-weight: bold; margin-bottom: 5px;">
+            Nombre completo
+        </label>
+        <input type="text" name="nombre" 
+               value="{{ usuario.nombre if usuario else '' }}"
+               required
+               style="width: 100%; padding: 10px; border: 1px solid #ccc;
+                      border-radius: 5px; margin-bottom: 15px; font-size: 14px;">
+
+        <label style="display: block; color: #003366; font-weight: bold; margin-bottom: 5px;">
+            Correo electrónico
+        </label>
+        <input type="email" name="email"
+               value="{{ usuario.email if usuario else '' }}"
+               required
+               style="width: 100%; padding: 10px; border: 1px solid #ccc;
+                      border-radius: 5px; margin-bottom: 15px; font-size: 14px;">
+
+        <label style="display: block; color: #003366; font-weight: bold; margin-bottom: 5px;">
+            Contraseña {% if usuario %}(dejar vacío para no cambiar){% endif %}
+        </label>
+        <input type="password" name="password"
+               {% if not usuario %}required{% endif %}
+               style="width: 100%; padding: 10px; border: 1px solid #ccc;
+                      border-radius: 5px; margin-bottom: 15px; font-size: 14px;">
+
+        <label style="display: block; color: #003366; font-weight: bold; margin-bottom: 5px;">
+            Rol
+        </label>
+        <select name="rol_id"
+                style="width: 100%; padding: 10px; border: 1px solid #ccc;
+                       border-radius: 5px; margin-bottom: 15px; font-size: 14px;">
+            {% for rol in roles %}
+            <option value="{{ rol.id }}" 
+                    {% if usuario and usuario.rol_id == rol.id %}selected{% endif %}>
+                {{ rol.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label style="display: block; color: #003366; font-weight: bold; margin-bottom: 5px;">
+            Estado
+        </label>
+        <select name="activo"
+                style="width: 100%; padding: 10px; border: 1px solid #ccc;
+                       border-radius: 5px; margin-bottom: 20px; font-size: 14px;">
+            <option value="1" {% if not usuario or usuario.activo %}selected{% endif %}>Activo</option>
+            <option value="0" {% if usuario and not usuario.activo %}selected{% endif %}>Inactivo</option>
+        </select>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit"
+                    style="background-color: #003366; color: white; padding: 10px 25px;
+                           border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                Guardar
+            </button>
+            <a href="/usuarios"
+               style="background-color: #888; color: white; padding: 10px 25px;
+                      border-radius: 5px; text-decoration: none; font-size: 14px;">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

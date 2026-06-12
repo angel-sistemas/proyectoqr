@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Serial - {{ equipo.serial }}</title>
+        <style>
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background-color: #003366;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            .card {
+                background-color: white;
+                border-radius: 15px;
+                padding: 40px;
+                text-align: center;
+                box-shadow: 0 4px 20px rgba(0,0,0.3);
+            }
+            h1 {
+                color: #003366;
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            .serial {
+                color: #003366;
+                font-size: 32px;
+                font-weight: bold;
+                letter-spacing: 2px;
+            }
+            .descripcion {
+                color: #003366;
+                font-size: #888;
+                font-size: 13px;
+                margin-top: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>TELEMATICA SAS</h1>
+            <p class="descripcion">{{ equipo.descripcion }}</p>
+            <p class="serial">{{ equipo.serial }}</p>
+            <p class="descripcion">{{ equipo.bodega }}</p>
+        </div>
+    </body>
+</html>

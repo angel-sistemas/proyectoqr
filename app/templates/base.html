@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Telematica - Inventario QR</title>
+        <style>
+            * {
+                margin : 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            body {
+                background-color: #f4f6f9;
+            }
+
+            nav {
+                background-color: #003366;
+                padding: 15px 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            nav h1 {
+                color: white;
+                font-size: 20px;
+            }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                margin-left: 20px;
+                font-size: 14px;
+            }
+
+            nav a:hover {
+                color: #00aaff;
+            }
+
+            .mensaje {
+                padding: 10px 20px;
+                margin-bottom: 20px;
+                border-radius: 5px;
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <h1> TELEMATICA - INVENTARIO QR</h1>
+            <div>
+                <a href="/">Inicio</a>
+                {% if current_user.tiene_permiso('importar_excel') %}
+                <a href="/import">Importar Excel</a>
+                {% endif %}
+                {% if current_user.tiene_permiso('generar_pdf') %}
+                <a href="/imprimir">Imprimir Etiqueta</a>
+                {% endif %}
+                {% if current_user.tiene_permiso('gestionar_usuarios') %}
+                <a href="/usuarios">Usuarios</a>
+                {% endif %}
+                <a href="/logout">Cerrar Secion</a>
+            </div>
+        </nav>
+        <div class="contenido">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mensaje">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block contenido %}{% endblock %}
+        </div>
+    </body>
+</html>
