@@ -1,82 +1,267 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Telematica - Inventario QR</title>
-        <style>
-            * {
-                margin : 0;
-                padding: 0;
-                box-sizing: border-box;
-                font-family: Arial, Helvetica, sans-serif;
-            }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telematica - Inventario QR</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
 
-            body {
-                background-color: #f4f6f9;
-            }
+        body {
+            background-color: #f4f6f9;
+            display: flex;
+        }
 
-            nav {
-                background-color: #003366;
-                padding: 15px 30px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
+        /* SIDEBAR */
+        #sidebar {
+            width: 240px;
+            min-height: 100vh;
+            background-color: #003366;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            overflow: hidden;
+        }
 
-            nav h1 {
-                color: white;
-                font-size: 20px;
+        #sidebar.collapsed {
+            width: 60px;
+            #sidebar.collapsed #user-text {
+            display: none;
             }
+        }
 
-            nav a {
-                color: white;
-                text-decoration: none;
-                margin-left: 20px;
-                font-size: 14px;
-            }
+        /* Logo/título */
+        .sidebar-header {
+            padding: 20px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #004080;
+            min-height: 70px;
+        }
 
-            nav a:hover {
-                color: #00aaff;
-            }
+        .sidebar-header i {
+            color: #00aaff;
+            font-size: 22px;
+            min-width: 30px;
+            text-align: center;
+        }
 
-            .mensaje {
-                padding: 10px 20px;
-                margin-bottom: 20px;
-                border-radius: 5px;
-                background-color: #d4edda;
-                color: #155724;
-                border: 1px solid #c3e6cb;
-            }
-        </style>
-    </head>
-    <body>
-        <nav>
-            <h1> TELEMATICA - INVENTARIO QR</h1>
-            <div>
-                <a href="/">Inicio</a>
-                {% if current_user.tiene_permiso('importar_excel') %}
-                <a href="/import">Importar Excel</a>
-                {% endif %}
-                {% if current_user.tiene_permiso('generar_pdf') %}
-                <a href="/imprimir">Imprimir Etiqueta</a>
-                {% endif %}
-                {% if current_user.tiene_permiso('gestionar_usuarios') %}
-                <a href="/usuarios">Usuarios</a>
-                {% endif %}
-                <a href="/logout">Cerrar Secion</a>
+        .sidebar-header span {
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* Botón colapsar */
+        #toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            font-size: 18px;
+            border-bottom: 1px solid #004080;
+        }
+
+        #toggle-btn:hover {
+            background-color: #004080;
+        }
+
+        /* Menú */
+        .sidebar-menu {
+            flex: 1;
+            padding: 10px 0;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px 18px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .sidebar-menu a:hover {
+            background-color: #004080;
+            color: #00aaff;
+        }
+
+        .sidebar-menu a i {
+            font-size: 18px;
+            min-width: 24px;
+            text-align: center;
+            color: #00aaff;
+        }
+
+        .sidebar-menu a span {
+            overflow: hidden;
+        }
+
+        /* Logout al fondo */
+        .sidebar-footer {
+            border-top: 1px solid #004080;
+            padding: 10px 0;
+        }
+
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px 18px;
+            color: #ff6b6b;
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .sidebar-footer a:hover {
+            background-color: #004080;
+        }
+
+        .sidebar-footer a i {
+            font-size: 18px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        /* Texto oculto cuando está colapsado */
+        #sidebar.collapsed .sidebar-header span,
+        #sidebar.collapsed .sidebar-menu a span,
+        #sidebar.collapsed .sidebar-footer a span {
+            display: none;
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        .contenido-wrapper {
+            margin-left: 240px;
+            flex: 1;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+        }
+
+        .contenido-wrapper.expanded {
+            margin-left: 60px;
+        }
+
+        .contenido {
+            padding: 20px;
+        }
+
+        /* Mensajes flash */
+        .mensaje {
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .mensaje.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-qrcode"></i>
+            <span>INVENYORLY - QR</span>
+        </div>
+
+        <div id="user-info" style="padding: 12px 16px; border-bottom: 1px solid #004080; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-user-circle" style="color: #00aaff; font-size: 28px; min-width: 30px;"></i>
+            <div id="user-text" style="overflow: hidden;">
+                <p style="color: white; font-size: 13px; font-weight: bold; margin: 0; white-space: nowrap;">{{ current_user.nombre }}</p>
+                <p style="color: #00aaff; font-size: 11px; margin: 0; white-space: nowrap;">{{ current_user.rol.nombre }}</p>
             </div>
-        </nav>
+        </div>
+
+        <button id="toggle-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="sidebar-menu">
+            <a href="/">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+            </a>
+            {% if current_user.tiene_permiso('importar_excel') %}
+            <a href="/importar">
+                <i class="fas fa-file-excel"></i>
+                <span>Importar Excel</span>
+            </a>
+            {% endif %}
+            {% if current_user.tiene_permiso('generar_pdf') %}
+            <a href="/imprimir">
+                <i class="fas fa-print"></i>
+                <span>Imprimir Etiqueta</span>
+            </a>
+            {% endif %}
+            {% if current_user.tiene_permiso('gestionar_usuarios') %}
+            <a href="/usuarios">
+                <i class="fas fa-users"></i>
+                <span>Usuarios</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="sidebar-footer">
+            <a href="/logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="contenido-wrapper" id="main-content">
         <div class="contenido">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="mensaje">{{ message }}</div>
+                        <div class="mensaje {{ category }}">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
             {% block contenido %}{% endblock %}
         </div>
-    </body>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+    </script>
+
+</body>
 </html>

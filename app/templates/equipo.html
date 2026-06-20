@@ -1,112 +1,181 @@
 {% extends 'base.html' %}
 
 {% block contenido %}
-<div style="max-width: 700px; margin: 0 auto;">
-    <a harf="/" style="color: #003366; text-decoration: none;
-                       font-size: 14px;">Volver al inventario</a>
-    <div style="background: white; border-radius: 10px;
-                box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-                margin-top: 20px; overflow: hidden;">
-        
-        <!--ENCABEZADO-->
-        <div style="background-color: #003366; padding: 20px 30px;
-                    display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h2 style="color: white; font-size: 18px;">RÓTULO DE IDENTIFICACIÓN</h2>
-                <p style="color: #aad4ff; font-size: 13px;">Telematica SAS</p>
+<div style="max-width: 850px; margin: 0 auto;">
+
+    <!-- VOLVER -->
+    <a href="{{ request.referrer or '/' }}" style="color: #003366; text-decoration: none; font-size: 13px;
+                   display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px;">
+    <i class="fas fa-arrow-left"></i> Volver al inventario
+</a>
+
+    <div style="display: grid; grid-template-columns: 1fr 280px; gap: 20px;">
+
+        <!-- COLUMNA IZQUIERDA: Datos -->
+        <div>
+            <!-- Encabezado -->
+            <div style="background: #003366; border-radius: 10px 10px 0 0;
+                        padding: 20px 25px; display: flex; align-items: center; gap: 15px;">
+                <i class="fas fa-microchip" style="color: #00aaff; font-size: 28px;"></i>
+                <div>
+                    <h2 style="color: white; font-size: 17px; margin: 0;">RÓTULO DE IDENTIFICACIÓN</h2>
+                    <p style="color: #aad4ff; font-size: 12px; margin: 0;">Telemática SAS</p>
+                </div>
             </div>
-            {% if equipo.imagen_path %}
-            <img src="/static/img/equipos/{{ equipo.imagen_path }}"
-                 style="width: 200px; height: 180px; object-fit: cover; border-radius: 8px;">
-            {% else %}
-            <div style="width: 150px; height: 150px; background: #aad4ff;
-                        border-radius: 8px; display: flex; align-items: center;
-                        justify-content: center; color: #003366; font-size: 11px; text-align: center;">
-                Sin imagen
+
+            <!-- Tabla de datos -->
+            <div style="background: white; border-radius: 0 0 10px 10px;
+                        box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #f0f5ff;">
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366;
+                                   width: 40%; font-size: 13px;">
+                            <i class="fas fa-building" style="margin-right: 6px;"></i>Propietario
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px;">{{ equipo.propietario if equipo.propietario else '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-hashtag" style="margin-right: 6px;"></i>Código Producto
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px;">{{ equipo.codigo_producto if equipo.codigo_producto else '-' }}</td>
+                    </tr>
+                    <tr style="background: #f0f5ff;">
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-tag" style="margin-right: 6px;"></i>Descripción
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px;">{{ equipo.descripcion if equipo.descripcion else '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-trademark" style="margin-right: 6px;"></i>Marca
+                        </td>
+                        <td style="padding: 11px 20px;">
+                            <span style="background: #e8f0fe; color: #003366; padding: 3px 10px;
+                                         border-radius: 20px; font-size: 12px; font-weight: bold;">
+                                {{ equipo.marca if equipo.marca else '-' }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr style="background: #f0f5ff;">
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-cube" style="margin-right: 6px;"></i>Modelo / Referencia
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px;">{{ equipo.referencia if equipo.referencia else '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-barcode" style="margin-right: 6px;"></i>Número de Serie
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px; font-family: monospace;
+                                   color: #003366; font-weight: bold;">{{ equipo.serial if equipo.serial else '-' }}</td>
+                    </tr>
+                    <tr style="background: #f0f5ff;">
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-id-badge" style="margin-right: 6px;"></i>Activo / Placa
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px;">{{ equipo.activo_placa if equipo.activo_placa else '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-network-wired" style="margin-right: 6px;"></i>Dirección MAC
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px; font-family: monospace;">{{ equipo.mac if equipo.mac else '-' }}</td>
+                    </tr>
+                    <tr style="background: #f0f5ff;">
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-circle" style="margin-right: 6px;"></i>Estado
+                        </td>
+                        <td style="padding: 11px 20px;">
+                            {% if equipo.estado == 'NUEVO' %}
+                                <span style="background: #d4edda; color: #155724; padding: 3px 10px;
+                                             border-radius: 20px; font-size: 12px;">{{ equipo.estado }}</span>
+                            {% elif equipo.estado == 'EN FALLA' %}
+                                <span style="background: #f8d7da; color: #721c24; padding: 3px 10px;
+                                             border-radius: 20px; font-size: 12px;">{{ equipo.estado }}</span>
+                            {% elif 'USADO EN BUEN ESTADO' in equipo.estado %}
+                                <span style="background: #d1ecf1; color: #0c5460; padding: 3px 10px;
+                                             border-radius: 20px; font-size: 12px;">{{ equipo.estado }}</span>
+                            {% else %}
+                                <span style="background: #f0f0f0; color: #555; padding: 3px 10px;
+                                            border-radius: 20px; font-size: 12px;">
+                                    {{ equipo.estado if equipo.estado else '-' }}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-warehouse" style="margin-right: 6px;"></i>Bodega
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px;">{{ equipo.bodega if equipo.bodega else '-' }}</td>
+                    </tr>
+                    <tr style="background: #f0f5ff;">
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-map-marker-alt" style="margin-right: 6px;"></i>Localización
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px;">{{ equipo.localizacion if equipo.localizacion else '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 11px 20px; font-weight: bold; color: #003366; font-size: 13px;">
+                            <i class="fas fa-dollar-sign" style="margin-right: 6px;"></i>Centro de Costos
+                        </td>
+                        <td style="padding: 11px 20px; font-size: 13px;">{{ equipo.centro_costos if equipo.centro_costos else '-' }}</td>
+                    </tr>
+                </table>
             </div>
-            {% endif %}        
         </div>
 
-        <!--TABALA DE DATOS-->
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr style="background-color: #f0f5ff;">
-                <td style="padding: 12px 20px; font-weight: bold; color: #003366; width: 40%;">Propietario</td>
-                <td style="padding: 12px 20px;">{{ equipo.propietario }}</td>
-            </tr>
-            <tr>
-               <td style="padding: 12px 20px; font-weight: bold; color: #003366;">Codigo Producto</td>
-               <td style="padding: 12px 20px;">{{ equipo.codigo_producto }}</td> 
-            </tr>
-            <tr style="background-color: #f0f5ff;">
-                <td style="padding: 12px 20px; font-weight: bold; color: #003366; width: 40%;">Descripción</td>
-                <td style="padding: 12px 20px;">{{ equipo.descripcion }}</td>
-            </tr>
-            <tr>
-               <td style="padding: 12px 20px; font-weight: bold; color: #003366;">Marca</td>
-               <td style="padding: 12px 20px;">{{ equipo.marca }}</td> 
-            </tr>
-            <tr style="background-color: #f0f5ff;">
-                <td style="padding: 12px 20px; font-weight: bold; color: #003366; width: 40%;">Modlo / Referencia</td>
-                <td style="padding: 12px 20px;">{{ equipo.referencia }}</td>
-            </tr>
-            <tr>
-               <td style="padding: 12px 20px; font-weight: bold; color: #003366;">Número de Serie</td>
-               <td style="padding: 12px 20px;">{{ equipo.serial }}</td> 
-            </tr>
-            <tr style="background-color: #f0f5ff;">
-                <td style="padding: 12px 20px; font-weight: bold; color: #003366; width: 40%;">Activo / Placa</td>
-                <td style="padding: 12px 20px;">{{ equipo.activo_placa }}</td>
-            </tr>
-            <tr>
-               <td style="padding: 12px 20px; font-weight: bold; color: #003366;">Dirección MAC</td>
-               <td style="padding: 12px 20px;">{{ equipo.mac }}</td> 
-            </tr>
-            <tr style="background-color: #f0f5ff;">
-                <td style="padding: 12px 20px; font-weight: bold; color: #003366; width: 40%;">Estado</td>
-                <td style="padding: 12px 20px;">{{ equipo.estado }}</td>
-            </tr>
-            <tr>
-               <td style="padding: 12px 20px; font-weight: bold; color: #003366;">Bodega</td>
-               <td style="padding: 12px 20px;">{{ equipo.bodega }}</td> 
-            </tr>
-            <tr style="background-color: #f0f5ff;">
-                <td style="padding: 12px 20px; font-weight: bold; color: #003366; width: 40%;">Localización</td>
-                <td style="padding: 12px 20px;">{{ equipo.localizacion }}</td>
-            </tr>
-            <tr>
-               <td style="padding: 12px 20px; font-weight: bold; color: #003366;">Centro de Costos</td>
-               <td style="padding: 12px 20px;">{{ equipo.centro_costos }}</td> 
-            </tr>
-        </table>
+        <!-- COLUMNA DERECHA: Imagen y QR -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+
+            <!-- Imagen del equipo -->
+            <div style="background: white; border-radius: 10px; padding: 20px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center;">
+                <p style="color: #003366; font-weight: bold; font-size: 13px; margin-bottom: 12px;">
+                    <i class="fas fa-camera" style="margin-right: 6px;"></i>Imagen del equipo
+                </p>
+                {% if equipo.imagen_path %}
+                <img src="/static/img/equipos/{{ equipo.imagen_path }}"
+                     style="width: 100%; border-radius: 8px; object-fit: cover; max-height: 200px;">
+                {% else %}
+                <div style="width: 100%; height: 150px; background: #f0f5ff; border-radius: 8px;
+                            display: flex; flex-direction: column; align-items: center;
+                            justify-content: center; color: #aaa; border: 2px dashed #ccd9f0;">
+                    <i class="fas fa-image" style="font-size: 36px; margin-bottom: 8px;"></i>
+                    <p style="font-size: 12px; margin: 0;">Sin imagen</p>
+                </div>
+                {% endif %}
+
+                <button onclick="buscarImagen('{{ equipo.serial }}')"
+                        id="btn-imagen"
+                        style="margin-top: 12px; width: 100%; background: #003366; color: white;
+                               padding: 9px; border: none; border-radius: 8px; cursor: pointer;
+                               font-size: 12px; display: flex; align-items: center;
+                               justify-content: center; gap: 6px;">
+                    <i class="fas fa-search"></i> Buscar imagen automáticamente
+                </button>
+                <p id="estado-imagen" style="margin-top: 8px; color: #555; font-size: 12px;"></p>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- BOTON BUSCAR IMG-->
- <div style="margin-top: 20px; text-align: center;">
-    <button onclick="buscarImagen('{{ equipo.serial}}')"
-            id="btn-imagen"
-            style="background-color: #003366; color: white; padding: 10px 25px;
-                   border: none; border-radius: 5px; cursor: pointer; font-size: 13px;">
-            Buscar imagen automaticamente
-        </button>
-        <p id="estado-imagen" style="margin-top: 10px; color: #555; font-size: 13px;"></p>
- </div>
-
- <script>
-    function buscarImagen(serial){
+<script>
+    function buscarImagen(serial) {
         document.getElementById('btn-imagen').disabled = true;
         document.getElementById('estado-imagen').innerText = 'Buscando imagen...';
 
         fetch('/buscar-imagen/' + serial)
             .then(r => r.json())
             .then(data => {
-                if (data.status === 'ok'){
-                    document.getElementById('estado-imagen').innerText = 'Imagen encontrada, recargue la pagina para verla.';
-                }else {
-                    document.getElementById('estado-imagen').innerText = 'No se enconro imagen.'
+                if (data.status === 'ok') {
+                    document.getElementById('estado-imagen').innerText = 'Imagen encontrada, recargue la página para verla.';
+                } else {
+                    document.getElementById('estado-imagen').innerText = 'No se encontró imagen.';
                 }
                 document.getElementById('btn-imagen').disabled = false;
             });
-        }
- </script>
+    }
+</script>
 {% endblock %}

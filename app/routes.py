@@ -113,6 +113,12 @@ def index():
         marcas=marcas
     )
 
+def limpiar(valor):
+    v = str(valor).strip()
+    if v.lower() in ('nan', 'none', '', 'nat'):
+        return ''
+    return v
+
 @main.route('/importar', methods=['GET', 'POST'])
 @login_required
 @requiere_permiso('importar_excel')

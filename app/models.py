@@ -27,6 +27,7 @@ class Usuario(UserMixin, db.Model):
     rol_id        = db.Column(db.Integer, db.ForeignKey('roles.id'))
     activo        = db.Column(db.Boolean, default=True)
     created_at    = db.Column(db.DateTime, default=datetime.now)
+    rol = db.relationship('Rol', foreign_keys=[rol_id])
 
     def tiene_permiso(self, permiso_nombre):
         if not self.rol_id:

@@ -1,53 +1,74 @@
 {% extends 'base.html' %}
 
 {% block contenido %}
-<h2 style="color: #003366; margin-bottom: 20px;">Imprimir Etiquetas QR</h2>
+<div style="margin-bottom: 25px; display: flex; align-items: center; gap: 12px;">
+    <i class="fas fa-print" style="font-size: 32px; color: #003366;"></i>
+    <div>
+        <h2 style="color: #003366; margin: 0;">Imprimir Etiquetas QR</h2>
+        <p style="color: #888; font-size: 13px; margin: 0;">Agrega los seriales y genera el PDF con las etiquetas.</p>
+    </div>
+</div>
 
-<div style="background-color: white; border-radius: 10px; padding: 25px;
-            box-shadow: 0 2px 8px rgb(0,0,0,0.1); max-width: 600px;">
-    <p style="color: #555; margin-bottom: 15px;">
-        Escanea o escribe los seriales de los equipos para generar las etiquetas QR.
-    </p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px;">
 
-    <!--CAMPO DE ESNTRADA-->
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <input type="text" id="input-serial"
-               placeholder="Escanea o escribe el serial..."
-               style="flex: 1; padding: 10px; border: 2px solid #003366;
-                       border-radius: 5px; font-size: 14px;"
-               onkeypress="if(event.key === 'Enter') agregarSerial()">
-        <button onclick="agregarSerial()"
-                style="background-color: #003366; color: white; padding: 10px 20px;
-                       border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
-            Agregar
-        </button>
+    <!-- PANEL IZQUIERDO: Entrada -->
+    <div style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="color: #003366; margin-bottom: 15px; font-size: 15px;">
+            <i class="fas fa-barcode" style="margin-right: 8px;"></i>Agregar Serial
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="text" id="input-serial"
+                   placeholder="Escanea o escribe el serial..."
+                   style="padding: 12px; border: 2px solid #003366; border-radius: 8px;
+                          font-size: 14px; outline: none; font-family: monospace;"
+                   onkeypress="if(event.key === 'Enter') agregarSerial()">
+            <button onclick="agregarSerial()"
+                    style="background-color: #003366; color: white; padding: 12px;
+                           border: none; border-radius: 8px; cursor: pointer;
+                           font-size: 14px; display: flex; align-items: center;
+                           justify-content: center; gap: 8px;">
+                <i class="fas fa-plus-circle"></i> Agregar a la lista
+            </button>
+        </div>
+
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #003366; font-weight: bold; font-size: 14px;">
+                    <i class="fas fa-list" style="margin-right: 6px;"></i>
+                    Total: <span id="contador">0</span> etiqueta(s)
+                </span>
+                <button onclick="limpiarLista()"
+                        style="background: none; border: 1px solid #ccc; color: #888;
+                               padding: 5px 12px; border-radius: 5px; cursor: pointer;
+                               font-size: 12px;">
+                    <i class="fas fa-trash"></i> Limpiar
+                </button>
+            </div>
+
+            <button onclick="generarPDF()"
+                    style="width: 100%; background: linear-gradient(135deg, #003366, #0055aa);
+                           color: white; padding: 14px; border: none; border-radius: 8px;
+                           cursor: pointer; font-size: 15px; display: flex;
+                           align-items: center; justify-content: center; gap: 10px;">
+                <i class="fas fa-file-pdf"></i> Generar PDF
+            </button>
+        </div>
     </div>
 
-    <!--LISTA DE SERIALES-->
-    <div id="lista-seriales" style="margin-bottom: 20px;">
-        <p style="color: #888; font-size: 13px;" id="mensaje-vacio">
-            No hay seriales agregados aun.
-        </p>
+    <!-- PANEL DERECHO: Lista de seriales -->
+    <div style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="color: #003366; margin-bottom: 15px; font-size: 15px;">
+            <i class="fas fa-clipboard-list" style="margin-right: 8px;"></i>Seriales agregados
+        </h3>
+        <div id="lista-seriales"
+             style="max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <div id="mensaje-vacio" style="text-align: center; padding: 40px 0; color: #bbb;">
+                <i class="fas fa-qrcode" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
+                <p style="font-size: 13px;">No hay seriales agregados aún.</p>
+            </div>
+        </div>
     </div>
 
-    <!--CONTADOR-->
-    <p style="color: #003366; font-weight: bold; margin-bottom: 15px;">
-        Total: <span id="contador">0</span> etiqueta(s)
-    </p>
-
-    <!--BOTONES-->
-    <div style="display: flex; gap: 10px;">
-        <button onclick="generarPDF()"
-                style="background-color: #003366; color: white; padding: 10px 25px;
-                       border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
-                Generar PDF
-    </button>
-        <button onclick="limpiarLista()"
-                style="background-color: #888; color: white; padding: 10px 25px;
-                       border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
-                Limpiar
-        </button>
-    </div>
 </div>
 
 <script>
@@ -56,14 +77,12 @@
     function agregarSerial() {
         const input = document.getElementById('input-serial');
         const serial = input.value.trim().toUpperCase();
-
         if (!serial) return;
         if (seriales.includes(serial)) {
-            alert('Este serial ya esta en la lista.');
+            alert('Este serial ya está en la lista.');
             input.value = '';
             return;
         }
-
         seriales.push(serial);
         input.value = '';
         input.focus();
@@ -71,29 +90,38 @@
     }
 
     function eliminarSerial(serial) {
-        seriales = serial.filter(s => s !== serial);
+        seriales = seriales.filter(s => s !== serial);
         actualizarLista();
     }
 
     function actualizarLista() {
         const lista = document.getElementById('lista-seriales');
-        const contador = document.getElementById('contador');
-        const mensajeVacio = document.getElementById('mensaje-vacio');
-
-        contador.innerText = seriales.length;
+        document.getElementById('contador').innerText = seriales.length;
 
         if (seriales.length === 0) {
-            lista.innerHTML = '<p style="color: #888; font-size: 13px;">No hay seriales afregados aun.</p>';
+            lista.innerHTML = `
+                <div id="mensaje-vacio" style="text-align: center; padding: 40px 0; color: #bbb;">
+                    <i class="fas fa-qrcode" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
+                    <p style="font-size: 13px;">No hay seriales agregados aún.</p>
+                </div>`;
             return;
         }
 
-        lista.innerHTML = seriales.map(s => `
-            <div style="display: flex; justify-content: space-between; aling-item: center;
-                        padding: 8px 12px; background: #f0f5ff; border-radius: 5px; margin-buttom: 5px;">
-                <span style="font-family: monospace; color: #003366;">${s}</span>
+        lista.innerHTML = seriales.map((s, i) => `
+            <div style="display: flex; justify-content: space-between; align-items: center;
+                        padding: 10px 14px; background: #f0f5ff; border-radius: 8px;
+                        border-left: 4px solid #003366;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="background: #003366; color: white; border-radius: 50%;
+                                 width: 22px; height: 22px; display: flex; align-items: center;
+                                 justify-content: center; font-size: 11px;">${i + 1}</span>
+                    <span style="font-family: monospace; color: #003366; font-size: 13px;">${s}</span>
+                </div>
                 <button onclick="eliminarSerial('${s}')"
                         style="background: none; border: none; color: #cc0000;
-                               cursor: pointer; font-size: 16px;">X</button>
+                               cursor: pointer; font-size: 16px;" title="Eliminar">
+                    <i class="fas fa-times-circle"></i>
+                </button>
             </div>
         `).join('');
     }

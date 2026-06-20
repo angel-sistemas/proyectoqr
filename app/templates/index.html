@@ -1,105 +1,166 @@
 {% extends 'base.html' %}
 
 {% block contenido %}
-<h2 style="color: #003366; margin-bottom: 20px;">Inventario de Equipos</h2>
 
-<!--FILTROS-->
-<form method="GET" action="/">
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
-        <input type="text" name="busqueda" value="{{ busqueda }}"
-            placeholder="Buscar por serial o descripción..."
-            style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; flex: 1; min-width: 200px;">
-
-        <input type="text" name="bodega" values="{{ bodega }}"
-               placeholder="Filtrar por bodega..."
-               style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; min-width: 180px;">
-
-        <select name="marca" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-            <option value="">Todas las marcas</option>
-            {% for m in marcas %}
-            <option value="{{ m[0] }}" {% if m[0] == marca %}selected{% endif %}>{{ m[0] }}</option>
-            {% endfor %}
-        </select>
-
-        <select name="por_pagina" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-            <option value="10" {% if por_pagina == 10 %}selected{% endif %}>10</option>
-            <option value="20" {% if por_pagina == 20 %}selected{% endif %}>20</option>
-            <option value="50" {% if por_pagina == 50 %}selected{% endif %}>50</option>
-            <option value="0" {% if por_pagina == 0 %}selected{% endif %}>Todos</option>
-        </select>
-
-        <button type="submit"
-                style="background-color: #003366; color: white; padding: 8px 20px;
-                border: none; border-radius: 5px; cursor: pointer;">
-            Buscar
-        </button>
-
-        <a href="/" style="background-color: #888; color: white; padding: 8px 20px;
-                           border-radius: 5px; text-decoration: none;">
-            Limpiar
-        </a>
+<!-- ENCABEZADO -->
+<div style="margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+    <i class="fas fa-boxes" style="font-size: 32px; color: #003366;"></i>
+    <div>
+        <h2 style="color: #003366; margin: 0;">Inventario de Equipos</h2>
+        <p style="color: #888; font-size: 13px; margin: 0;">Consulta y gestiona el inventario de equipos.</p>
     </div>
-</form>
+</div>
 
-<p style="margin-bottom: 20px; color: #555;">
-    Total encontrados: <strong>{{ total }}</strong>
-</p>
+<!-- TARJETA DE FILTROS -->
+<div style="background: white; border-radius: 10px; padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+    <p style="color: #003366; font-weight: bold; font-size: 14px; margin-bottom: 12px;">
+        <i class="fas fa-filter" style="margin-right: 6px;"></i>Filtros de búsqueda
+    </p>
+    <form method="GET" action="/">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <input type="text" name="busqueda" value="{{ busqueda }}"
+                placeholder="Buscar por serial o descripción..."
+                style="padding: 9px 12px; border: 1px solid #ccc; border-radius: 8px;
+                       flex: 1; min-width: 200px; font-size: 13px;">
 
-<!--TABLA-->
-<div style="overflow-x: auto;">
-    <table style="width: 100%; border-collapse: collapse;
-                  background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <input type="text" name="bodega" value="{{ bodega }}"
+                   placeholder="Filtrar por bodega..."
+                   style="padding: 9px 12px; border: 1px solid #ccc; border-radius: 8px;
+                          min-width: 160px; font-size: 13px;">
 
-    <thead>
-        <tr style="background-color: #003366; color: white;">
-            <th style="padding: 12px 15px; text-align: left;">Serial</th>
-            <th style="padding: 12px 15px; text-align: left;">Código</th>
-            <th style="padding: 12px 15px; text-align: left;">Descripción</th>
-            <th style="padding: 12px 15px; text-align: left;">Marca</th>
-            <th style="padding: 12px 15px; text-align: left;">Estado</th>
-            {% if current_user.tiene_permiso('ver_equipo') %}
-            <th style="padding: 12px 15px; text-align: left;">Acciones</th>
-            {% endif %}
-        </tr>
-    </thead>
-    <tbody>
-        {% for equipo in equipos %}
-        <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 12px 15px;">{{ equipo.serial }}</td>
-            <td style="padding: 12px 15px;">{{ equipo.codigo_producto }}</td>
-            <td style="padding: 12px 15px;">{{ equipo.descripcion }}</td>
-            <td style="padding: 12px 15px;">{{ equipo.marca }}</td>
-            <td style="padding: 12px 15px;">{{ equipo.estado }}</td>
-            {% if current_user.tiene_permiso('ver_equipo') %}
-            <td style="padding: 12px 15px;">
-                <a href="/equipo/{{ equipo.serial }}"
-                   style="color:#003366; text-decoration: none;
-                   margin-right: 10px;">Ver</a>
-                <a href="/qr/{{ equipo.serial }}"
-                   style="color: #00aaff; text-decoration: none;">QR</a>
-            </td>
-            {% endif %}
-        </tr>
-        {% endfor %}
-    </tbody>
+            <select name="marca" style="padding: 9px 12px; border: 1px solid #ccc;
+                                        border-radius: 8px; font-size: 13px;">
+                <option value="">Todas las marcas</option>
+                {% for m in marcas %}
+                <option value="{{ m[0] }}" {% if m[0] == marca %}selected{% endif %}>{{ m[0] }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="por_pagina" style="padding: 9px 12px; border: 1px solid #ccc;
+                                             border-radius: 8px; font-size: 13px;">
+                <option value="10" {% if por_pagina == 10 %}selected{% endif %}>10</option>
+                <option value="20" {% if por_pagina == 20 %}selected{% endif %}>20</option>
+                <option value="50" {% if por_pagina == 50 %}selected{% endif %}>50</option>
+                <option value="0" {% if por_pagina == 0 %}selected{% endif %}>Todos</option>
+            </select>
+
+            <button type="submit"
+                    style="background-color: #003366; color: white; padding: 9px 20px;
+                           border: none; border-radius: 8px; cursor: pointer; font-size: 13px;
+                           display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+
+            <a href="/" style="background-color: #888; color: white; padding: 9px 20px;
+                               border-radius: 8px; text-decoration: none; font-size: 13px;
+                               display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-times"></i> Limpiar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- CONTADOR -->
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+    <p style="color: #555; font-size: 14px; margin: 0;">
+        <i class="fas fa-cubes" style="color: #003366; margin-right: 6px;"></i>
+        Total encontrados: <strong style="color: #003366;">{{ total }}</strong>
+    </p>
+</div>
+
+<!-- TABLA -->
+<div style="background: white; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #003366; color: white;">
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">
+                    <i class="fas fa-barcode" style="margin-right: 6px;"></i>Serial
+                </th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Código</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Descripción</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Marca</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Estado</th>
+                {% if current_user.tiene_permiso('ver_equipo') %}
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Acciones</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for equipo in equipos %}
+            <tr style="border-bottom: 1px solid #f0f0f0; transition: background 0.15s;"
+                onmouseover="this.style.background='#f5f8ff'"
+                onmouseout="this.style.background='white'">
+                <td style="padding: 12px 15px; font-size: 13px; font-family: monospace; color: #003366;">
+                    {{ equipo.serial }}
+                </td>
+                <td style="padding: 12px 15px; font-size: 13px; color: #555;">
+                    {{ equipo.codigo_producto }}
+                </td>
+                <td style="padding: 12px 15px; font-size: 13px; color: #333;">
+                    {{ equipo.descripcion }}
+                </td>
+                <td style="padding: 12px 15px; font-size: 13px;">
+                    <span style="background: #e8f0fe; color: #003366; padding: 3px 10px;
+                                 border-radius: 20px; font-size: 12px; font-weight: bold;">
+                        {{ equipo.marca }}
+                    </span>
+                </td>
+                <td style="padding: 12px 15px; font-size: 13px;">
+                    {% if equipo.estado == 'NUEVO' %}
+                        <span style="background: #d4edda; color: #155724; padding: 3px 10px;
+                            border-radius: 20px; font-size: 12px;">{{ equipo.estado }}</span>
+                    {% elif equipo.estado == 'EN FALLA' %}
+                        <span style="background: #f8d7da; color: #721c24; padding: 3px 10px;
+                            border-radius: 20px; font-size: 12px;">{{ equipo.estado }}</span>
+                    {% elif equipo.estado and 'BUEN ESTADO' in equipo.estado %}
+                        <span style="background: #d1ecf1; color: #0c5460; padding: 3px 10px;
+                            border-radius: 20px; font-size: 12px;">{{ equipo.estado }}</span>
+                    {% else %}
+                        <span style="background: #f0f0f0; color: #555; padding: 3px 10px;
+                            border-radius: 20px; font-size: 12px;">{{ equipo.estado or '-' }}</span>
+                    {% endif %}
+                </td>
+                {% if current_user.tiene_permiso('ver_equipo') %}
+                <td style="padding: 12px 15px;">
+                    <a href="/equipo/{{ equipo.serial }}"
+                       style="color: #003366; text-decoration: none; margin-right: 10px;
+                              font-size: 13px; font-weight: bold;">
+                        <i class="fas fa-eye" style="margin-right: 3px;"></i>Ver
+                    </a>
+                    <a href="/qr/{{ equipo.serial }}"
+                       style="color: #00aaff; text-decoration: none; font-size: 13px; font-weight: bold;">
+                        <i class="fas fa-qrcode" style="margin-right: 3px;"></i>QR
+                    </a>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
-<!--PAGINACION-->
+
+<!-- PAGINACIÓN -->
 {% if paginas > 1 %}
-<div style="margin-top: 20px; display: flex; gap: 5px; flex-wrap: wrap;">
+<div style="margin-top: 20px; display: flex; gap: 5px; flex-wrap: wrap; align-items: center;">
+    <span style="color: #888; font-size: 13px; margin-right: 5px;">Página:</span>
     {% for p in range(1, paginas + 1) %}
         {% if p == pagina %}
-            <a href="?pagina={{ p }}&por_pagina={{ por_pagina }}&busqueda=={{ busqueda }}&bodega={{ bodega }}&marca={{ marca }}"
-               style="padding: 6px 12px; border-radius: 4px; text-decoration: none; background-color: #003366; color: white;">
+            <a href="?pagina={{ p }}&por_pagina={{ por_pagina }}&busqueda={{ busqueda }}&bodega={{ bodega }}&marca={{ marca }}"
+               style="padding: 7px 13px; border-radius: 6px; text-decoration: none;
+                      background-color: #003366; color: white; font-size: 13px; font-weight: bold;">
                {{ p }}
             </a>
         {% else %}
             <a href="?pagina={{ p }}&por_pagina={{ por_pagina }}&busqueda={{ busqueda }}&bodega={{ bodega }}&marca={{ marca }}"
-               style="padding: 6px 12px; border-radius: 4px; text-decoration: none; background-color: #eee; color: #333;">
+               style="padding: 7px 13px; border-radius: 6px; text-decoration: none;
+                      background-color: #eee; color: #333; font-size: 13px;">
                {{ p }}
             </a>
-        {% endif %}    
+        {% endif %}
     {% endfor %}
 </div>
 {% endif %}
+
 {% endblock %}
