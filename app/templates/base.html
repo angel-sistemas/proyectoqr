@@ -5,187 +5,236 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telematica - Inventario QR</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
-        }
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+    }
 
-        body {
-            background-color: #f4f6f9;
-            display: flex;
-        }
+    body {
+        background-color: #f4f6f9;
+        display: flex;
+    }
 
-        /* SIDEBAR */
+    #sidebar {
+        width: 240px;
+        min-height: 100vh;
+        background-color: #003366;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease, width 0.3s ease;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        overflow: hidden;
+    }
+
+    #sidebar.collapsed {
+        width: 60px;
+        #sidebar.collapsed #version-text {
+            display: none;
+        }
+    }
+
+    .sidebar-header {
+        padding: 20px 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid #004080;
+        min-height: 70px;
+    }
+
+    .sidebar-header i {
+        color: #00aaff;
+        font-size: 22px;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    .sidebar-header span {
+        color: white;
+        font-size: 13px;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    #toggle-btn {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        font-size: 18px;
+        border-bottom: 1px solid #004080;
+    }
+
+    #toggle-btn:hover { background-color: #004080; }
+
+    .sidebar-menu { flex: 1; padding: 10px 0; }
+
+    .sidebar-menu a {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 14px 18px;
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        white-space: nowrap;
+        transition: background-color 0.2s;
+    }
+
+    .sidebar-menu a:hover { background-color: #004080; color: #00aaff; }
+
+    .sidebar-menu a i {
+        font-size: 18px;
+        min-width: 24px;
+        text-align: center;
+        color: #00aaff;
+    }
+
+    .sidebar-footer { border-top: 1px solid #004080; padding: 10px 0; }
+
+    .sidebar-footer a {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 14px 18px;
+        color: #ff6b6b;
+        text-decoration: none;
+        font-size: 14px;
+        white-space: nowrap;
+        transition: background-color 0.2s;
+    }
+
+    .sidebar-footer a:hover { background-color: #004080; }
+
+    .sidebar-footer a i {
+        font-size: 18px;
+        min-width: 24px;
+        text-align: center;
+    }
+
+    #sidebar.collapsed .sidebar-header span,
+    #sidebar.collapsed .sidebar-menu a span,
+    #sidebar.collapsed .sidebar-footer a span,
+    #sidebar.collapsed #user-text {
+        display: none;
+    }
+
+    /* OVERLAY para móvil */
+    #overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    }
+
+    #overlay.active { display: block; }
+
+    /* CONTENIDO */
+    .contenido-wrapper {
+        margin-left: 240px;
+        flex: 1;
+        transition: margin-left 0.3s ease;
+        min-height: 100vh;
+        min-width: 0;
+    }
+
+    .contenido-wrapper.collapsed { margin-left: 60px; }
+
+    .contenido { padding: 20px; }
+
+    .mensaje {
+        padding: 10px 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .mensaje.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .mobile-topbar { display: none;}
+
+    /* RESPONSIVE MÓVIL */
+    @media (max-width: 768px) {
         #sidebar {
-            width: 240px;
-            min-height: 100vh;
-            background-color: #003366;
-            display: flex;
-            flex-direction: column;
-            transition: width 0.3s ease;
-            position: fixed;
-            top: 0;
+            transform: translateX(-100%);
+            width: 240px !important;
             left: 0;
-            z-index: 100;
-            overflow: hidden;
+            visibility: hidden;
+        }
+
+        #sidebar.mobile-open {
+            transform: translateX(0);
+            visibility: visible;
         }
 
         #sidebar.collapsed {
-            width: 60px;
-            #sidebar.collapsed #user-text {
-            display: none;
-            }
+            width: 240px !important;
+            transform: translateX(-100%);
         }
 
-        /* Logo/título */
-        .sidebar-header {
-            padding: 20px 15px;
+        #sidebar.collapsed .sidebar-header span,
+        #sidebar.collapsed .sidebar-menu a span,
+        #sidebar.collapsed .sidebar-footer a span,
+        #sidebar.collapsed #user-text {
+            display: block !important;
+        }
+
+        .contenido-wrapper {
+            margin-left: 0 !important;
+        }
+
+        /* Barra superior en móvil */
+        .mobile-topbar {
             display: flex;
             align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid #004080;
-            min-height: 70px;
+            background: #003366;
+            padding: 12px 16px;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .sidebar-header i {
-            color: #00aaff;
-            font-size: 22px;
-            min-width: 30px;
-            text-align: center;
-        }
-
-        .sidebar-header span {
-            color: white;
-            font-size: 13px;
-            font-weight: bold;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-
-        /* Botón colapsar */
-        #toggle-btn {
+        .mobile-topbar button {
             background: none;
             border: none;
             color: white;
+            font-size: 22px;
             cursor: pointer;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            font-size: 18px;
-            border-bottom: 1px solid #004080;
         }
 
-        #toggle-btn:hover {
-            background-color: #004080;
-        }
-
-        /* Menú */
-        .sidebar-menu {
-            flex: 1;
-            padding: 10px 0;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 14px 18px;
+        .mobile-topbar span {
             color: white;
-            text-decoration: none;
-            font-size: 14px;
-            white-space: nowrap;
-            transition: background-color 0.2s;
+            font-size: 15px;
+            font-weight: bold;
         }
+    }
 
-        .sidebar-menu a:hover {
-            background-color: #004080;
-            color: #00aaff;
-        }
-
-        .sidebar-menu a i {
-            font-size: 18px;
-            min-width: 24px;
-            text-align: center;
-            color: #00aaff;
-        }
-
-        .sidebar-menu a span {
-            overflow: hidden;
-        }
-
-        /* Logout al fondo */
-        .sidebar-footer {
-            border-top: 1px solid #004080;
-            padding: 10px 0;
-        }
-
-        .sidebar-footer a {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 14px 18px;
-            color: #ff6b6b;
-            text-decoration: none;
-            font-size: 14px;
-            white-space: nowrap;
-            transition: background-color 0.2s;
-        }
-
-        .sidebar-footer a:hover {
-            background-color: #004080;
-        }
-
-        .sidebar-footer a i {
-            font-size: 18px;
-            min-width: 24px;
-            text-align: center;
-        }
-
-        /* Texto oculto cuando está colapsado */
-        #sidebar.collapsed .sidebar-header span,
-        #sidebar.collapsed .sidebar-menu a span,
-        #sidebar.collapsed .sidebar-footer a span {
-            display: none;
-        }
-
-        /* CONTENIDO PRINCIPAL */
-        .contenido-wrapper {
-            margin-left: 240px;
-            flex: 1;
-            transition: margin-left 0.3s ease;
-            min-height: 100vh;
-        }
-
-        .contenido-wrapper.expanded {
-            margin-left: 60px;
-        }
-
-        .contenido {
-            padding: 20px;
-        }
-
-        /* Mensajes flash */
-        .mensaje {
-            padding: 10px 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .mensaje.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-    </style>
+    @media (min-width: 769px) {
+        .mobile-topbar { display: none; }
+    }
+</style>
 </head>
 <body>
+    <div id="overlay"></div>
 
     <!-- SIDEBAR -->
     <div id="sidebar">
@@ -237,10 +286,24 @@
                 <span>Cerrar Sesión</span>
             </a>
         </div>
+        <div style="padding: 12px 16px; border-top: 1px solid #004080; text-align: center;">
+            <span id="version-text" style="color: #4a7aaa; font-size: 11px; white-space: nowrap;">
+                v1.0.0
+            </span>
+        </div>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
+   <!-- CONTENIDO PRINCIPAL -->
     <div class="contenido-wrapper" id="main-content">
+
+        <!-- Topbar solo en móvil -->
+        <div class="mobile-topbar">
+            <button onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <span>INVENYORLY - QR</span>
+        </div>
+
         <div class="contenido">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -254,13 +317,27 @@
         </div>
     </div>
 
-    <script>
+   <script>
+        const isMobile = () => window.innerWidth <= 768;
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
+            const wrapper = document.getElementById('main-content');
+            const overlay = document.getElementById('overlay');
+
+            if (isMobile()) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                wrapper.classList.toggle('collapsed');
+            }
         }
+
+        document.getElementById('overlay').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('mobile-open');
+            document.getElementById('overlay').classList.remove('active');
+        });
     </script>
 
 </body>
