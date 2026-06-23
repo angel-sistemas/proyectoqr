@@ -9,6 +9,8 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+import threading
+
 
 
 
@@ -119,6 +121,46 @@ def limpiar(valor):
         return ''
     return v
 
+def procesar_excel(archivo_bytes, app):
+    with app.app_context():
+        try:
+            import io
+            print("🔄 Iniciando importación...")
+            df = pd.read_excel(io.BytesIO(archivo_bytes), engine='openpyxl')
+            total = len(df)
+            print(f"📋 Total filas: {total}")
+            
+            chunk_size = 500
+            for i in range(0, total, chunk_size):
+                chunk = df.iloc[i:i + chunk_size]
+                for _, fila in chunk.iterrows():
+                    serial = limpiar(fila.get('serial', ''))
+                    if not serial:
+                        continue
+                    equipo = Equipo.query.filter_by(serial=serial).first()
+                    if not equipo:
+                        equipo = Equipo()
+                    equipo.serial          = serial
+                    equipo.codigo_producto = limpiar(fila.get('coD_PRODUCTO', ''))
+                    equipo.propietario     = limpiar(fila.get('nombrE_PROPIETARIO', ''))
+                    equipo.descripcion     = limpiar(fila.get('nombrE_PRODUCTO', ''))
+                    equipo.marca           = limpiar(fila.get('nombrE_MARCA', ''))
+                    equipo.referencia      = limpiar(fila.get('referencia', ''))
+                    equipo.activo_placa    = limpiar(fila.get('numerO_ACTIVO', ''))
+                    equipo.mac             = limpiar(fila.get('mac', ''))
+                    equipo.estado          = limpiar(fila.get('estado', ''))
+                    equipo.localizacion    = limpiar(fila.get('localizacion', ''))
+                    equipo.bodega          = limpiar(fila.get('nombrE_BODEGA', ''))
+                    equipo.centro_costos   = limpiar(fila.get('centrodecostos', ''))
+                    equipo.codigo_bodega   = limpiar(fila.get('coD_BODEGA', ''))
+                    db.session.add(equipo)
+                db.session.commit()
+                print(f"✅ Procesadas {min(i + chunk_size, total)}/{total} filas")
+            print("✅ Importación completada")
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Error en importación: {e}")
+
 @main.route('/importar', methods=['GET', 'POST'])
 @login_required
 @requiere_permiso('importar_excel')
@@ -126,35 +168,14 @@ def importar():
     if request.method == 'POST':
         archivo = request.files['archivo']
         if archivo:
-            df = pd.read_excel(archivo, engine='openpyxl')
-            for _, fila in df.iterrows():
-                equipo = Equipo.query.filter_by(
-                    serial=str(fila.get('serial', ''))
-                ).first()
-
-                if not equipo:
-                    equipo = Equipo()
-
-                equipo.serial             = str(fila.get('serial', ''))
-                equipo.codigo_producto    = str(fila.get('coD_PRODUCTO', ''))
-                equipo.propietario        = str(fila.get('nombrE_PROPIETARIO', ''))
-                equipo.descripcion        = str(fila.get('nombrE_PRODUCTO', ''))
-                equipo.marca              = str(fila.get('nombrE_MARCA', ''))
-                equipo.referencia         = str(fila.get('referencia', ''))
-                equipo.activo_placa       = str(fila.get('numerO_ACTIVO', ''))
-                equipo.mac                = str(fila.get('mac', ''))
-                equipo.estado             = str(fila.get('estado', ''))
-                equipo.localizacion       = str(fila.get('localizacion', ''))
-                equipo.bodega             = str(fila.get('nombrE_BODEGA', ''))
-                equipo.centro_costos      = str(fila.get('centrodecostos', ''))
-                equipo.codigo_bodega      = str(fila.get('coD_BODEGA'))
-
-                db.session.add(equipo)
-
-            db.session.commit()
-            flash('Importacion exitosa ✅', 'succes')
+            archivo_bytes = archivo.read()
+            from flask import current_app
+            app = current_app._get_current_object()
+            hilo = threading.Thread(target=procesar_excel, args=(archivo_bytes, app))
+            hilo.daemon = True
+            hilo.start()
+            flash('Importación iniciada ⏳ El inventario se actualizará en unos minutos.', 'success')
             return redirect(url_for('main.index'))
-            
     return render_template('importar.html')
 
 @main.route('/equipo/<serial>')
