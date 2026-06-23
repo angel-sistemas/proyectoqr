@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import Config
+import os
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -20,5 +21,9 @@ def create_app():
     
     from app.routes import main
     app.register_blueprint(main)
+
+     # Crear carpetas necesarias
+    os.makedirs(os.path.join(app.static_folder, 'qr'), exist_ok=True)
+    os.makedirs(os.path.join(app.static_folder, 'img', 'equipos'), exist_ok=True)
     
     return app
