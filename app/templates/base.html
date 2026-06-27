@@ -260,6 +260,12 @@
                 <i class="fas fa-home"></i>
                 <span>Inicio</span>
             </a>
+            {% if current_user.tiene_permiso('gestionar_inventario') %}
+            <a href="/inventarios">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Inventarios</span>
+            </a>
+            {% endif %}
             {% if current_user.tiene_permiso('importar_excel') %}
             <a href="/importar">
                 <i class="fas fa-file-excel"></i>

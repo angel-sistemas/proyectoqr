@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <i class="fas fa-file-alt" style="font-size: 32px; color: #003366;"></i>
+        <div>
+            <h2 style="color: #003366; margin: 0;">Reporte de Inventario</h2>
+            <p style="color: #888; font-size: 13px; margin: 0;">
+                {{ 'General' if inventario.tipo == 'general' else 'Cíclico' }} —
+                {{ inventario.bodega }}
+                {% if inventario.localizacion %} / {{ inventario.localizacion }}{% endif %}
+            </p>
+        </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="/inventarios"
+           style="background: #888; color: white; padding: 10px 20px; border-radius: 8px;
+                  text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+        <button onclick="generarPDF()"
+                style="background: #003366; color: white; padding: 10px 20px; border: none;
+                       border-radius: 8px; cursor: pointer; font-size: 13px;
+                       display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-file-pdf"></i> Descargar PDF
+        </button>
+    </div>
+</div>
+
+<!-- INFORMACIÓN GENERAL -->
+<div style="background: white; border-radius: 10px; padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+    <h3 style="color: #003366; margin-bottom: 15px; font-size: 15px;">
+        <i class="fas fa-info-circle" style="margin-right: 8px;"></i>Información del Inventario
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+        <div>
+            <p style="color: #888; font-size: 12px; margin: 0;">Responsable</p>
+            <p style="color: #003366; font-weight: bold; font-size: 14px; margin: 0;">{{ inventario.responsable }}</p>
+        </div>
+        <div>
+            <p style="color: #888; font-size: 12px; margin: 0;">Ejecutado por</p>
+            <p style="color: #003366; font-weight: bold; font-size: 14px; margin: 0;">{{ inventario.ejecutado_por }}</p>
+        </div>
+        <div>
+            <p style="color: #888; font-size: 12px; margin: 0;">Fecha</p>
+            <p style="color: #003366; font-weight: bold; font-size: 14px; margin: 0;">{{ inventario.fecha.strftime('%d/%m/%Y %H:%M') }}</p>
+        </div>
+        <div>
+            <p style="color: #888; font-size: 12px; margin: 0;">Tipo</p>
+            <p style="color: #003366; font-weight: bold; font-size: 14px; margin: 0;">{{ 'General' if inventario.tipo == 'general' else 'Cíclico' }}</p>
+        </div>
+        <div>
+            <p style="color: #888; font-size: 12px; margin: 0;">Bodega</p>
+            <p style="color: #003366; font-weight: bold; font-size: 14px; margin: 0;">{{ inventario.bodega }}</p>
+        </div>
+        {% if inventario.localizacion %}
+        <div>
+            <p style="color: #888; font-size: 12px; margin: 0;">Localización</p>
+            <p style="color: #003366; font-weight: bold; font-size: 14px; margin: 0;">{{ inventario.localizacion }}</p>
+        </div>
+        {% endif %}
+        {% if inventario.observaciones %}
+        <div style="grid-column: 1 / -1;">
+            <p style="color: #888; font-size: 12px; margin: 0;">Observaciones</p>
+            <p style="color: #333; font-size: 13px; margin: 0;">{{ inventario.observaciones }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- TARJETAS RESUMEN -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #003366;">
+        <p style="color: #888; font-size: 12px; margin: 0 0 5px;">Esperados</p>
+        <p style="color: #003366; font-size: 28px; font-weight: bold; margin: 0;">{{ encontrados|length + faltantes|length }}</p>
+    </div>
+    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #28a745;">
+        <p style="color: #888; font-size: 12px; margin: 0 0 5px;">Encontrados</p>
+        <p style="color: #28a745; font-size: 28px; font-weight: bold; margin: 0;">{{ encontrados|length }}</p>
+    </div>
+    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #dc3545;">
+        <p style="color: #888; font-size: 12px; margin: 0 0 5px;">Faltantes</p>
+        <p style="color: #dc3545; font-size: 28px; font-weight: bold; margin: 0;">{{ faltantes|length }}</p>
+    </div>
+    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #ffc107;">
+        <p style="color: #888; font-size: 12px; margin: 0 0 5px;">Sobrantes</p>
+        <p style="color: #856404; font-size: 28px; font-weight: bold; margin: 0;">{{ sobrantes|length }}</p>
+    </div>
+</div>
+
+<!-- FALTANTES -->
+{% if faltantes %}
+<div style="background: white; border-radius: 10px; padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+    <h3 style="color: #dc3545; margin-bottom: 15px; font-size: 15px;">
+        <i class="fas fa-times-circle" style="margin-right: 8px;"></i>Equipos Faltantes ({{ faltantes|length }})
+    </h3>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8d7da;">
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #721c24;">#</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #721c24;">Serial</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in faltantes %}
+                <tr style="border-bottom: 1px solid #f0f0f0;">
+                    <td style="padding: 10px 15px; font-size: 13px; color: #555;">{{ loop.index }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; font-family: monospace; color: #dc3545;">{{ item.serial }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- SOBRANTES -->
+{% if sobrantes %}
+<div style="background: white; border-radius: 10px; padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+    <h3 style="color: #856404; margin-bottom: 15px; font-size: 15px;">
+        <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>Equipos Sobrantes ({{ sobrantes|length }})
+    </h3>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #fff3cd;">
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #856404;">#</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #856404;">Serial</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sobrantes %}
+                <tr style="border-bottom: 1px solid #f0f0f0;">
+                    <td style="padding: 10px 15px; font-size: 13px; color: #555;">{{ loop.index }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; font-family: monospace; color: #856404;">{{ item.serial }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- ENCONTRADOS -->
+<div style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <h3 style="color: #155724; margin-bottom: 15px; font-size: 15px;">
+        <i class="fas fa-check-circle" style="margin-right: 8px;"></i>Equipos Encontrados ({{ encontrados|length }})
+    </h3>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #d4edda;">
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #155724;">#</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #155724;">Serial</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in encontrados %}
+                <tr style="border-bottom: 1px solid #f0f0f0;">
+                    <td style="padding: 10px 15px; font-size: 13px; color: #555;">{{ loop.index }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; font-family: monospace; color: #155724;">{{ item.serial }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function generarPDF() {
+        window.open('/inventario/{{ inventario.id }}/pdf', '_blank');
+    }
+</script>
+{% endblock %}

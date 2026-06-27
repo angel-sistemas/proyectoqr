@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div style="margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <i class="fas fa-clipboard-list" style="font-size: 32px; color: #003366;"></i>
+        <div>
+            <h2 style="color: #003366; margin: 0;">Módulo de Inventarios</h2>
+            <p style="color: #888; font-size: 13px; margin: 0;">Gestiona los inventarios generales y cíclicos.</p>
+        </div>
+    </div>
+    <a href="/inventario/nuevo"
+       style="background: #003366; color: white; padding: 10px 20px; border-radius: 8px;
+              text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-plus"></i> Nuevo Inventario
+    </a>
+</div>
+
+{% if inventarios %}
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #003366; color: white;">
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Tipo</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Bodega</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Localización</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Responsable</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Ejecutado por</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Fecha</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Estado</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in inventarios %}
+            <tr style="border-bottom: 1px solid #f0f0f0;"
+                onmouseover="this.style.background='#f5f8ff'"
+                onmouseout="this.style.background='white'">
+                <td style="padding: 12px 15px; font-size: 13px;">
+                    {% if inv.tipo == 'general' %}
+                        <span style="background: #e8f0fe; color: #003366; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">General</span>
+                    {% else %}
+                        <span style="background: #fff3cd; color: #856404; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Cíclico</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 15px; font-size: 13px;">{{ inv.bodega }}</td>
+                <td style="padding: 12px 15px; font-size: 13px;">{{ inv.localizacion if inv.localizacion else '-' }}</td>
+                <td style="padding: 12px 15px; font-size: 13px;">{{ inv.responsable }}</td>
+                <td style="padding: 12px 15px; font-size: 13px;">{{ inv.ejecutado_por }}</td>
+                <td style="padding: 12px 15px; font-size: 13px;">{{ inv.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td style="padding: 12px 15px;">
+                    {% if inv.estado == 'en_proceso' %}
+                        <span style="background: #fff3cd; color: #856404; padding: 3px 10px; border-radius: 20px; font-size: 12px;">En proceso</span>
+                    {% else %}
+                        <span style="background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 20px; font-size: 12px;">Finalizado</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 15px; font-size: 13px;">
+                    {% if inv.estado == 'en_proceso' %}
+                    <a href="/inventario/{{ inv.id }}/ejecutar"
+                       style="color: #003366; text-decoration: none; margin-right: 10px; font-weight: bold;">
+                        <i class="fas fa-play"></i> Continuar
+                    </a>
+                    {% endif %}
+                    <a href="/inventario/{{ inv.id }}/reporte"
+                       style="color: #00aaff; text-decoration: none; font-weight: bold;">
+                        <i class="fas fa-file-pdf"></i> Reporte
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div style="text-align: center; padding: 60px; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <i class="fas fa-clipboard-list" style="font-size: 50px; color: #ccc; display: block; margin-bottom: 15px;"></i>
+    <p style="color: #888; font-size: 15px;">No hay inventarios registrados aún.</p>
+    <a href="/inventario/nuevo"
+       style="background: #003366; color: white; padding: 10px 20px; border-radius: 8px;
+              text-decoration: none; font-size: 13px; margin-top: 15px; display: inline-block;">
+        <i class="fas fa-plus"></i> Crear primer inventario
+    </a>
+</div>
+{% endif %}
+{% endblock %}

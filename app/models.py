@@ -65,3 +65,27 @@ class Equipo(db.Model):
 
     def _repr_(self):
         return f'<Equipo {self.serial}>'
+
+class Inventario(db.Model):
+    __tablename__ = 'inventarios'
+
+    id            = db.Column(db.Integer, primary_key=True)
+    tipo          = db.Column(db.String(20))
+    bodega        = db.Column(db.String(100))
+    localizacion  = db.Column(db.String(100))
+    responsable   = db.Column(db.String(100))
+    ejecutado_por = db.Column(db.String(100))
+    fecha         = db.Column(db.DateTime, default=datetime.now)
+    estado        = db.Column(db.String(20), default='en_proceso')
+    observaciones = db.Column(db.Text)
+    items         = db.relationship('ItemInventario', backref='inventario', lazy=True)
+
+class ItemInventario(db.Model):
+    __tablename__ = 'items_inventario'
+
+    id             = db.Column(db.Integer, primary_key=True)
+    inventario_id  = db.Column(db.Integer, db.ForeignKey('inventarios.id'))
+    serial         = db.Column(db.String(100))
+    encontrado     = db.Column(db.Boolean, default=False)
+    esperado       = db.Column(db.Boolean, default=True)
+    observaciones  = db.Column(db.Text)

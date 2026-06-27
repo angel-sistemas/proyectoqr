@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <i class="fas fa-barcode" style="font-size: 32px; color: #003366;"></i>
+        <div>
+            <h2 style="color: #003366; margin: 0;">Ejecutar Inventario</h2>
+            <p style="color: #888; font-size: 13px; margin: 0;">
+                {{ 'General' if inventario.tipo == 'general' else 'Cíclico' }} — 
+                {{ inventario.bodega }}
+                {% if inventario.localizacion %} / {{ inventario.localizacion }}{% endif %}
+            </p>
+        </div>
+    </div>
+    <form method="POST" action="/inventario/{{ inventario.id }}/finalizar"
+          onsubmit="return confirm('¿Finalizar el inventario? No podrás escanear más equipos.')">
+        <button type="submit"
+                style="background: #155724; color: white; padding: 10px 20px; border: none;
+                       border-radius: 8px; cursor: pointer; font-size: 13px;
+                       display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-check-circle"></i> Finalizar Inventario
+        </button>
+    </form>
+</div>
+
+<!-- TARJETAS DE RESUMEN -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #003366;">
+        <p style="color: #888; font-size: 12px; margin: 0 0 5px;">Esperados</p>
+        <p style="color: #003366; font-size: 28px; font-weight: bold; margin: 0;" id="total">
+            {{ items|selectattr('esperado')|list|length }}
+        </p>
+    </div>
+    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #28a745;">
+        <p style="color: #888; font-size: 12px; margin: 0 0 5px;">Encontrados</p>
+        <p style="color: #28a745; font-size: 28px; font-weight: bold; margin: 0;" id="encontrados">
+            {{ encontrados }}
+        </p>
+    </div>
+    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #dc3545;">
+        <p style="color: #888; font-size: 12px; margin: 0 0 5px;">Faltantes</p>
+        <p style="color: #dc3545; font-size: 28px; font-weight: bold; margin: 0;" id="faltantes">
+            {{ faltantes }}
+        </p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+    <!-- PANEL ESCANEO -->
+    <div style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="color: #003366; margin-bottom: 15px; font-size: 15px;">
+            <i class="fas fa-qrcode" style="margin-right: 8px;"></i>Escanear Serial
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="text" id="input-serial"
+                   placeholder="Escanea o escribe el serial..."
+                   style="padding: 12px; border: 2px solid #003366; border-radius: 8px;
+                          font-size: 14px; font-family: monospace;"
+                   onkeypress="if(event.key==='Enter') escanear()"
+                   autofocus>
+            <button onclick="escanear()"
+                    style="background: #003366; color: white; padding: 12px; border: none;
+                           border-radius: 8px; cursor: pointer; font-size: 14px;
+                           display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-search"></i> Registrar
+            </button>
+        </div>
+        <div id="mensaje-scan" style="margin-top: 15px; padding: 10px; border-radius: 8px; display: none; font-size: 13px;"></div>
+
+        <!-- Últimos escaneados -->
+        <div style="margin-top: 20px;">
+            <p style="color: #003366; font-weight: bold; font-size: 13px; margin-bottom: 10px;">
+                <i class="fas fa-history" style="margin-right: 6px;"></i>Últimos escaneados
+            </p>
+            <div id="ultimos" style="display: flex; flex-direction: column; gap: 6px; max-height: 250px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- PANEL FALTANTES -->
+    <div style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="color: #003366; margin-bottom: 15px; font-size: 15px;">
+            <i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #dc3545;"></i>Equipos Faltantes
+        </h3>
+        <div id="lista-faltantes" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+            {% for item in items %}
+                {% if not item.encontrado and item.esperado %}
+                <div id="item-{{ item.serial }}"
+                     style="padding: 8px 12px; background: #f8d7da; border-radius: 6px;
+                            border-left: 4px solid #dc3545; font-size: 12px; font-family: monospace; color: #721c24;">
+                    {{ item.serial }}
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    let ultimos = [];
+
+    function escanear() {
+        const input = document.getElementById('input-serial');
+        const serial = input.value.trim().toUpperCase();
+        if (!serial) return;
+
+        fetch('/inventario/{{ inventario.id }}/ejecutar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'serial=' + encodeURIComponent(serial)
+        })
+        .then(r => r.json())
+        .then(data => {
+            const msg = document.getElementById('mensaje-scan');
+            msg.style.display = 'block';
+            msg.innerText = data.mensaje;
+
+            if (data.status === 'ok') {
+                msg.style.background = '#d4edda';
+                msg.style.color = '#155724';
+                // Quitar de faltantes
+                const el = document.getElementById('item-' + serial);
+                if (el) el.remove();
+                // Actualizar contador
+                let f = parseInt(document.getElementById('faltantes').innerText);
+                let e = parseInt(document.getElementById('encontrados').innerText);
+                document.getElementById('faltantes').innerText = Math.max(0, f - 1);
+                document.getElementById('encontrados').innerText = e + 1;
+            } else if (data.status === 'sobrante') {
+                msg.style.background = '#fff3cd';
+                msg.style.color = '#856404';
+            } else {
+                msg.style.background = '#f8d7da';
+                msg.style.color = '#721c24';
+            }
+
+            // Agregar a últimos escaneados
+            ultimos.unshift({serial, status: data.status});
+            if (ultimos.length > 10) ultimos.pop();
+            actualizarUltimos();
+
+            input.value = '';
+            input.focus();
+        });
+    }
+
+    function actualizarUltimos() {
+        const div = document.getElementById('ultimos');
+        div.innerHTML = ultimos.map(u => `
+            <div style="padding: 8px 12px; border-radius: 6px; font-size: 12px; font-family: monospace;
+                        background: ${u.status === 'ok' ? '#d4edda' : u.status === 'sobrante' ? '#fff3cd' : '#f8d7da'};
+                        color: ${u.status === 'ok' ? '#155724' : u.status === 'sobrante' ? '#856404' : '#721c24'};
+                        border-left: 4px solid ${u.status === 'ok' ? '#28a745' : u.status === 'sobrante' ? '#ffc107' : '#dc3545'};">
+                ${u.status === 'ok' ? '✅' : u.status === 'sobrante' ? '⚠️' : '❌'} ${u.serial}
+            </div>
+        `).join('');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div style="margin-bottom: 25px; display: flex; align-items: center; gap: 12px;">
+    <i class="fas fa-plus-circle" style="font-size: 32px; color: #003366;"></i>
+    <div>
+        <h2 style="color: #003366; margin: 0;">Nuevo Inventario</h2>
+        <p style="color: #888; font-size: 13px; margin: 0;">Configura el inventario a realizar.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px;">
+
+    <!-- FORMULARIO -->
+    <div style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="color: #003366; margin-bottom: 20px; font-size: 15px;">
+            <i class="fas fa-cog" style="margin-right: 8px;"></i>Configuración
+        </h3>
+        <form method="POST" id="form-inventario">
+
+            <!-- Tipo -->
+            <div style="margin-bottom: 15px;">
+                <label style="color: #003366; font-size: 13px; font-weight: bold; display: block; margin-bottom: 6px;">
+                    <i class="fas fa-list" style="margin-right: 6px;"></i>Tipo de inventario
+                </label>
+                <select name="tipo" id="tipo" onchange="toggleLocalizacion()"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px;">
+                    <option value="general">General</option>
+                    <option value="ciclico">Cíclico</option>
+                </select>
+            </div>
+
+            <!-- Bodega -->
+            <div style="margin-bottom: 15px;">
+                <label style="color: #003366; font-size: 13px; font-weight: bold; display: block; margin-bottom: 6px;">
+                    <i class="fas fa-warehouse" style="margin-right: 6px;"></i>Bodega
+                </label>
+                <select name="bodega" id="bodega" onchange="cargarLocalizaciones()"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px;">
+                    <option value="">Selecciona una bodega...</option>
+                    {% for b in bodegas %}
+                    <option value="{{ b }}">{{ b }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Localización (solo cíclico) -->
+            <div id="div-localizacion" style="margin-bottom: 15px; display: none;">
+                <label style="color: #003366; font-size: 13px; font-weight: bold; display: block; margin-bottom: 6px;">
+                    <i class="fas fa-map-marker-alt" style="margin-right: 6px;"></i>Localización
+                </label>
+                <select name="localizacion" id="localizacion"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px;">
+                    <option value="">Selecciona una localización...</option>
+                </select>
+            </div>
+
+            <!-- Responsable -->
+            <div style="margin-bottom: 15px;">
+                <label style="color: #003366; font-size: 13px; font-weight: bold; display: block; margin-bottom: 6px;">
+                    <i class="fas fa-user-tie" style="margin-right: 6px;"></i>Responsable
+                </label>
+                <input type="text" name="responsable" placeholder="Nombre del responsable..."
+                       style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px;">
+            </div>
+
+            <!-- Observaciones -->
+            <div style="margin-bottom: 20px;">
+                <label style="color: #003366; font-size: 13px; font-weight: bold; display: block; margin-bottom: 6px;">
+                    <i class="fas fa-sticky-note" style="margin-right: 6px;"></i>Observaciones
+                </label>
+                <textarea name="observaciones" rows="3" placeholder="Observaciones opcionales..."
+                          style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; resize: vertical;"></textarea>
+            </div>
+
+            <button type="submit"
+                    style="width: 100%; background: #003366; color: white; padding: 12px;
+                           border: none; border-radius: 8px; cursor: pointer; font-size: 14px;
+                           display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-play"></i> Iniciar Inventario
+            </button>
+        </form>
+    </div>
+
+    <!-- INSTRUCCIONES -->
+    <div style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="color: #003366; margin-bottom: 15px; font-size: 15px;">
+            <i class="fas fa-info-circle" style="margin-right: 8px;"></i>Instrucciones
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: #003366; color: white; border-radius: 50%; width: 26px; height: 26px;
+                            display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">1</div>
+                <p style="color: #555; font-size: 13px; margin: 0;">Selecciona el <strong>tipo de inventario</strong>: General para toda la bodega, Cíclico para una ubicación específica.</p>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: #003366; color: white; border-radius: 50%; width: 26px; height: 26px;
+                            display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">2</div>
+                <p style="color: #555; font-size: 13px; margin: 0;">Selecciona la <strong>bodega</strong> a inventariar.</p>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: #003366; color: white; border-radius: 50%; width: 26px; height: 26px;
+                            display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">3</div>
+                <p style="color: #555; font-size: 13px; margin: 0;">Ingresa el nombre del <strong>responsable</strong> del inventario.</p>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: #003366; color: white; border-radius: 50%; width: 26px; height: 26px;
+                            display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">4</div>
+                <p style="color: #555; font-size: 13px; margin: 0;">Haz clic en <strong>Iniciar Inventario</strong> para comenzar el escaneo.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; padding: 12px 15px; background: #e8f0fe;
+                    border-left: 4px solid #003366; border-radius: 5px;">
+            <p style="color: #003366; font-size: 12px; margin: 0;">
+                <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                El sistema cargará automáticamente los equipos esperados según la bodega y localización seleccionada.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleLocalizacion() {
+        const tipo = document.getElementById('tipo').value;
+        const div = document.getElementById('div-localizacion');
+        div.style.display = tipo === 'ciclico' ? 'block' : 'none';
+    }
+
+    function cargarLocalizaciones() {
+        const bodega = document.getElementById('bodega').value;
+        const select = document.getElementById('localizacion');
+        select.innerHTML = '<option value="">Cargando...</option>';
+
+        if (!bodega) return;
+
+        fetch('/api/localizaciones?bodega=' + encodeURIComponent(bodega))
+            .then(r => r.json())
+            .then(data => {
+                select.innerHTML = '<option value="">Selecciona una localización...</option>';
+                data.localizaciones.forEach(loc => {
+                    select.innerHTML += `<option value="${loc}">${loc}</option>`;
+                });
+            });
+    }
+</script>
+{% endblock %}

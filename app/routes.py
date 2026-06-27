@@ -10,6 +10,8 @@ from reportlab.lib.units import cm
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import threading
+from app.models import Equipo, Usuario, Rol, Permiso, RolPermiso
+from app.models import Equipo, Usuario, Rol, Permiso, RolPermiso, Inventario, ItemInventario
 
 
 
@@ -433,4 +435,218 @@ def eliminar_usuario(id):
     db.session.commit()
     flash('Usuario eliminado ✅', 'success')
     return redirect(url_for('main.lista_usuarios'))
+
+# ==================== MÓDULO DE INVENTARIOS ====================
+
+@main.route('/inventarios')
+@login_required
+@requiere_permiso('gestionar_inventario')
+def inventarios():
+    inventarios = Inventario.query.order_by(Inventario.fecha.desc()).all()
+    return render_template('inventarios.html', inventarios=inventarios)
+
+@main.route('/inventario/nuevo', methods=['GET', 'POST'])
+@login_required
+@requiere_permiso('gestionar_inventario')
+def nuevo_inventario():
+    bodegas = db.session.query(Equipo.bodega).distinct().order_by(Equipo.bodega).all()
+    bodegas = [b[0] for b in bodegas if b[0]]
+    
+    if request.method == 'POST':
+        tipo        = request.form.get('tipo')
+        bodega      = request.form.get('bodega')
+        localizacion = request.form.get('localizacion', '')
+        responsable = request.form.get('responsable')
+        observaciones = request.form.get('observaciones', '')
+
+        inventario = Inventario()
+        inventario.tipo          = tipo
+        inventario.bodega        = bodega
+        inventario.localizacion  = localizacion
+        inventario.responsable   = responsable
+        inventario.ejecutado_por = current_user.nombre
+        inventario.observaciones = observaciones
+        inventario.estado        = 'en_proceso'
+
+        db.session.add(inventario)
+        db.session.commit()
+
+        # Cargar equipos esperados según tipo
+        if tipo == 'general':
+            equipos = Equipo.query.filter_by(bodega=bodega).all()
+        else:
+            equipos = Equipo.query.filter_by(bodega=bodega, localizacion=localizacion).all()
+
+        for equipo in equipos:
+            item = ItemInventario()
+            item.inventario_id = inventario.id
+            item.serial        = equipo.serial
+            item.encontrado    = False
+            item.esperado      = True
+            db.session.add(item)
+
+        db.session.commit()
+        flash(f'Inventario creado con {len(equipos)} equipos esperados.', 'success')
+        return redirect(url_for('main.ejecutar_inventario', id=inventario.id))
+
+    return render_template('nuevo_inventario.html', bodegas=bodegas)
+
+@main.route('/inventario/<int:id>/ejecutar', methods=['GET', 'POST'])
+@login_required
+@requiere_permiso('gestionar_inventario')
+def ejecutar_inventario(id):
+    inventario = Inventario.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        serial = request.form.get('serial', '').strip().upper()
+        if serial:
+            item = ItemInventario.query.filter_by(
+                inventario_id=id, serial=serial
+            ).first()
+            if item:
+                item.encontrado = True
+                db.session.commit()
+                return {'status': 'ok', 'mensaje': f'Serial {serial} encontrado ✅'}
+            else:
+                # Serial no esperado - sobrante
+                nuevo = ItemInventario()
+                nuevo.inventario_id = id
+                nuevo.serial        = serial
+                nuevo.encontrado    = True
+                nuevo.esperado      = False
+                db.session.add(nuevo)
+                db.session.commit()
+                return {'status': 'sobrante', 'mensaje': f'Serial {serial} no estaba en la lista ⚠️'}
+
+    items = ItemInventario.query.filter_by(inventario_id=id).all()
+    encontrados = sum(1 for i in items if i.encontrado and i.esperado)
+    faltantes   = sum(1 for i in items if not i.encontrado and i.esperado)
+    sobrantes   = sum(1 for i in items if i.encontrado and not i.esperado)
+
+    return render_template('ejecutar_inventario.html',
+                           inventario=inventario,
+                           items=items,
+                           encontrados=encontrados,
+                           faltantes=faltantes,
+                           sobrantes=sobrantes)
+
+@main.route('/inventario/<int:id>/finalizar', methods=['POST'])
+@login_required
+@requiere_permiso('gestionar_inventario')
+def finalizar_inventario(id):
+    inventario = Inventario.query.get_or_404(id)
+    inventario.estado = 'finalizado'
+    db.session.commit()
+    flash('Inventario finalizado ✅', 'success')
+    return redirect(url_for('main.reporte_inventario', id=id))
+
+@main.route('/inventario/<int:id>/reporte')
+@login_required
+@requiere_permiso('gestionar_inventario')
+def reporte_inventario(id):
+    inventario = Inventario.query.get_or_404(id)
+    items = ItemInventario.query.filter_by(inventario_id=id).all()
+    encontrados = [i for i in items if i.encontrado and i.esperado]
+    faltantes   = [i for i in items if not i.encontrado and i.esperado]
+    sobrantes   = [i for i in items if i.encontrado and not i.esperado]
+    return render_template('reporte_inventario.html',
+                           inventario=inventario,
+                           encontrados=encontrados,
+                           faltantes=faltantes,
+                           sobrantes=sobrantes)
+
+@main.route('/api/localizaciones')
+@login_required
+def api_localizaciones():
+    bodega = request.args.get('bodega', '')
+    locs = db.session.query(Equipo.localizacion).filter_by(bodega=bodega).distinct().order_by(Equipo.localizacion).all()
+    locs = [l[0] for l in locs if l[0]]
+    return {'localizaciones': locs}
+
+@main.route('/inventario/<int:id>/pdf')
+@login_required
+@requiere_permiso('gestionar_inventario')
+def pdf_inventario(id):
+    inventario = Inventario.query.get_or_404(id)
+    items = ItemInventario.query.filter_by(inventario_id=id).all()
+    encontrados = [i for i in items if i.encontrado and i.esperado]
+    faltantes   = [i for i in items if not i.encontrado and i.esperado]
+    sobrantes   = [i for i in items if i.encontrado and not i.esperado]
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    ancho, alto = letter
+
+    # ENCABEZADO
+    c.setFillColorRGB(0, 0.2, 0.4)
+    c.rect(0, alto - 80, ancho, 80, fill=True, stroke=False)
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(30, alto - 40, "TELEMÁTICA SAS - REPORTE DE INVENTARIO")
+    c.setFont("Helvetica", 11)
+    tipo_texto = "General" if inventario.tipo == "general" else "Cíclico"
+    c.drawString(30, alto - 65, f"{tipo_texto} | {inventario.bodega}")
+
+    # INFORMACIÓN
+    c.setFillColorRGB(0, 0, 0)
+    y = alto - 110
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(30, y, "INFORMACIÓN DEL INVENTARIO")
+    c.line(30, y - 5, ancho - 30, y - 5)
+
+    y -= 25
+    c.setFont("Helvetica", 10)
+    c.drawString(30, y, f"Responsable: {inventario.responsable}")
+    c.drawString(300, y, f"Ejecutado por: {inventario.ejecutado_por}")
+    y -= 18
+    c.drawString(30, y, f"Fecha: {inventario.fecha.strftime('%d/%m/%Y %H:%M')}")
+    c.drawString(300, y, f"Estado: {'Finalizado' if inventario.estado == 'finalizado' else 'En proceso'}")
+    y -= 18
+    if inventario.localizacion:
+        c.drawString(30, y, f"Localización: {inventario.localizacion}")
+        y -= 18
+    if inventario.observaciones:
+        c.drawString(30, y, f"Observaciones: {inventario.observaciones}")
+        y -= 18
+
+    # RESUMEN
+    y -= 15
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(30, y, "RESUMEN")
+    c.line(30, y - 5, ancho - 30, y - 5)
+    y -= 25
+    c.setFont("Helvetica", 10)
+    c.drawString(30, y, f"Total esperados: {len(encontrados) + len(faltantes)}")
+    c.drawString(200, y, f"Encontrados: {len(encontrados)}")
+    c.drawString(350, y, f"Faltantes: {len(faltantes)}")
+    c.drawString(460, y, f"Sobrantes: {len(sobrantes)}")
+
+    def dibujar_tabla(titulo, items_lista, color_rgb, y_pos):
+        if not items_lista:
+            return y_pos
+        y_pos -= 25
+        c.setFont("Helvetica-Bold", 11)
+        c.setFillColorRGB(*color_rgb)
+        c.drawString(30, y_pos, titulo)
+        c.setFillColorRGB(0, 0, 0)
+        c.line(30, y_pos - 5, ancho - 30, y_pos - 5)
+        y_pos -= 20
+        c.setFont("Helvetica", 9)
+        for i, item in enumerate(items_lista, 1):
+            if y_pos < 50:
+                c.showPage()
+                y_pos = alto - 50
+            c.drawString(30, y_pos, f"{i}.")
+            c.drawString(55, y_pos, item.serial)
+            y_pos -= 15
+        return y_pos
+
+    y = dibujar_tabla(f"FALTANTES ({len(faltantes)})", faltantes, (0.7, 0.1, 0.1), y)
+    y = dibujar_tabla(f"SOBRANTES ({len(sobrantes)})", sobrantes, (0.6, 0.4, 0), y)
+    y = dibujar_tabla(f"ENCONTRADOS ({len(encontrados)})", encontrados, (0.1, 0.5, 0.2), y)
+
+    c.save()
+    buffer.seek(0)
+    return send_file(buffer, mimetype='application/pdf',
+                     download_name=f'inventario_{inventario.id}_{inventario.bodega}.pdf')
 
