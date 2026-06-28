@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, json, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_manager
 from app import db, login_manager
 from app.models import Equipo, Usuario, Rol, Permiso, RolPermiso
@@ -489,7 +489,10 @@ def nuevo_inventario():
         flash(f'Inventario creado con {len(equipos)} equipos esperados.', 'success')
         return redirect(url_for('main.ejecutar_inventario', id=inventario.id))
 
-    return render_template('nuevo_inventario.html', bodegas=bodegas)
+    import json
+    bodegas_json = json.dumps(bodegas)
+
+    return render_template('nuevo_inventario.html', bodegas=bodegas, bodegas_json=bodegas_json)
 
 @main.route('/inventario/<int:id>/ejecutar', methods=['GET', 'POST'])
 @login_required

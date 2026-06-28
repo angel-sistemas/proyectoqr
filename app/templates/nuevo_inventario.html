@@ -30,18 +30,21 @@
                 </select>
             </div>
 
-            <!-- Bodega -->
+           <!-- Bodega -->
             <div style="margin-bottom: 15px;">
                 <label style="color: #003366; font-size: 13px; font-weight: bold; display: block; margin-bottom: 6px;">
                     <i class="fas fa-warehouse" style="margin-right: 6px;"></i>Bodega
                 </label>
-                <select name="bodega" id="bodega" onchange="cargarLocalizaciones()"
-                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px;">
-                    <option value="">Selecciona una bodega...</option>
-                    {% for b in bodegas %}
-                    <option value="{{ b }}">{{ b }}</option>
-                    {% endfor %}
-                </select>
+                <input type="text" id="buscar-bodega"
+                    placeholder="Escribe el nombre o abreviatura..."
+                    oninput="filtrarBodegas()"
+                    autocomplete="off"
+                    style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px;">
+                <input type="hidden" name="bodega" id="bodega">
+                <div id="sugerencias-bodega"
+                    style="border: 1px solid #ccc; border-radius: 8px; max-height: 200px;
+                        overflow-y: auto; display: none; background: white; margin-top: 4px;">
+                </div>
             </div>
 
             <!-- Localización (solo cíclico) -->
@@ -121,27 +124,77 @@
 </div>
 
 <script>
-    function toggleLocalizacion() {
-        const tipo = document.getElementById('tipo').value;
-        const div = document.getElementById('div-localizacion');
-        div.style.display = tipo === 'ciclico' ? 'block' : 'none';
+
+const bodegas = {{ bodegas_json | safe }};
+
+function filtrarBodegas() {
+    const texto = document.getElementById('buscar-bodega').value.toUpperCase();
+    const div = document.getElementById('sugerencias-bodega');
+    document.getElementById('bodega').value = '';
+
+    if (!texto) {
+        div.style.display = 'none';
+        return;
     }
 
-    function cargarLocalizaciones() {
-        const bodega = document.getElementById('bodega').value;
-        const select = document.getElementById('localizacion');
-        select.innerHTML = '<option value="">Cargando...</option>';
+    // Filtrar por palabras clave o abreviaturas
+    const palabras = texto.split(' ').filter(p => p.length > 0);
+    const filtradas = bodegas.filter(b => {
+        const bodegaUpper = b.toUpperCase();
+        // Buscar por cada palabra escrita
+        return palabras.every(p => bodegaUpper.includes(p)) ||
+               // Buscar por iniciales (BPY = Bodega Principal Yopal)
+               generarIniciales(b).includes(texto);
+    });
 
-        if (!bodega) return;
+    if (filtradas.length === 0) {
+        div.style.display = 'none';
+        return;
+    }
 
-        fetch('/api/localizaciones?bodega=' + encodeURIComponent(bodega))
-            .then(r => r.json())
-            .then(data => {
-                select.innerHTML = '<option value="">Selecciona una localización...</option>';
-                data.localizaciones.forEach(loc => {
-                    select.innerHTML += `<option value="${loc}">${loc}</option>`;
-                });
+    div.innerHTML = filtradas.map(b => `
+        <div onclick="seleccionarBodega('${b}')"
+             style="padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f0f0f0;"
+             onmouseover="this.style.background='#f0f5ff'"
+             onmouseout="this.style.background='white'">
+            ${b}
+        </div>
+    `).join('');
+    div.style.display = 'block';
+}
+
+function generarIniciales(bodega) {
+    return bodega.split(' ').map(p => p[0]).join('').toUpperCase();
+}
+
+function seleccionarBodega(bodega) {
+    document.getElementById('buscar-bodega').value = bodega;
+    document.getElementById('bodega').value = bodega;
+    document.getElementById('sugerencias-bodega').style.display = 'none';
+    cargarLocalizaciones();
+}
+
+function toggleLocalizacion() {
+    const tipo = document.getElementById('tipo').value;
+    const div = document.getElementById('div-localizacion');
+    div.style.display = tipo === 'ciclico' ? 'block' : 'none';
+}
+
+function cargarLocalizaciones() {
+    const bodega = document.getElementById('bodega').value;
+    const select = document.getElementById('localizacion');
+    select.innerHTML = '<option value="">Cargando...</option>';
+
+    if (!bodega) return;
+
+    fetch('/api/localizaciones?bodega=' + encodeURIComponent(bodega))
+        .then(r => r.json())
+        .then(data => {
+            select.innerHTML = '<option value="">Selecciona una localización...</option>';
+            data.localizaciones.forEach(loc => {
+                select.innerHTML += `<option value="${loc}">${loc}</option>`;
             });
-    }
+        });
+}
 </script>
 {% endblock %}
