@@ -107,6 +107,9 @@
                 <tr style="background: #f8d7da;">
                     <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #721c24;">#</th>
                     <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #721c24;">Serial</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #721c24;">Descripción</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #721c24;">Bodega</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #721c24;">Ubicación</th>
                 </tr>
             </thead>
             <tbody>
@@ -114,6 +117,9 @@
                 <tr style="border-bottom: 1px solid #f0f0f0;">
                     <td style="padding: 10px 15px; font-size: 13px; color: #555;">{{ loop.index }}</td>
                     <td style="padding: 10px 15px; font-size: 13px; font-family: monospace; color: #dc3545;">{{ item.serial }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; color: #333;">{{ item.descripcion }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; color: #333;">{{ item.bodega }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; color: #333;">{{ item.ubicacion }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -135,6 +141,9 @@
                 <tr style="background: #fff3cd;">
                     <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #856404;">#</th>
                     <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #856404;">Serial</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #856404;">Descripción</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #856404;">Bodega</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #856404;">Ubicación</th>
                 </tr>
             </thead>
             <tbody>
@@ -142,6 +151,9 @@
                 <tr style="border-bottom: 1px solid #f0f0f0;">
                     <td style="padding: 10px 15px; font-size: 13px; color: #555;">{{ loop.index }}</td>
                     <td style="padding: 10px 15px; font-size: 13px; font-family: monospace; color: #856404;">{{ item.serial }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; color: #333;">{{ item.descripcion }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; color: #333;">{{ item.bodega }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; color: #333;">{{ item.ubicacion }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -161,6 +173,9 @@
                 <tr style="background: #d4edda;">
                     <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #155724;">#</th>
                     <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #155724;">Serial</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #155724;">Descripción</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #155724;">Bodega</th>
+                    <th style="padding: 10px 15px; text-align: left; font-size: 13px; color: #155724;">Ubicación</th>
                 </tr>
             </thead>
             <tbody>
@@ -168,6 +183,9 @@
                 <tr style="border-bottom: 1px solid #f0f0f0;">
                     <td style="padding: 10px 15px; font-size: 13px; color: #555;">{{ loop.index }}</td>
                     <td style="padding: 10px 15px; font-size: 13px; font-family: monospace; color: #155724;">{{ item.serial }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; color: #333;">{{ item.descripcion }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; color: #333;">{{ item.bodega }}</td>
+                    <td style="padding: 10px 15px; font-size: 13px; color: #333;">{{ item.ubicacion }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

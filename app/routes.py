@@ -552,11 +552,25 @@ def reporte_inventario(id):
     encontrados = [i for i in items if i.encontrado and i.esperado]
     faltantes   = [i for i in items if not i.encontrado and i.esperado]
     sobrantes   = [i for i in items if i.encontrado and not i.esperado]
+    
+    # Obtener datos del equipo para cada item
+    def enriquecer(lista):
+        resultado = []
+        for item in lista:
+            equipo = Equipo.query.filter_by(serial=item.serial).first()
+            resultado.append({
+                'serial': item.serial,
+                'descripcion': equipo.descripcion if equipo and equipo.descripcion else '-',
+                'bodega': equipo.bodega if equipo and equipo.bodega else '-',
+                'ubicacion': equipo.localizacion if equipo and equipo.localizacion else '-'
+            })
+        return resultado
+
     return render_template('reporte_inventario.html',
                            inventario=inventario,
-                           encontrados=encontrados,
-                           faltantes=faltantes,
-                           sobrantes=sobrantes)
+                           encontrados=enriquecer(encontrados),
+                           faltantes=enriquecer(faltantes),
+                           sobrantes=enriquecer(sobrantes))
 
 @main.route('/api/localizaciones')
 @login_required
@@ -565,6 +579,8 @@ def api_localizaciones():
     locs = db.session.query(Equipo.localizacion).filter_by(bodega=bodega).distinct().order_by(Equipo.localizacion).all()
     locs = [l[0] for l in locs if l[0]]
     return {'localizaciones': locs}
+
+import os
 
 @main.route('/inventario/<int:id>/pdf')
 @login_required
@@ -580,70 +596,122 @@ def pdf_inventario(id):
     c = canvas.Canvas(buffer, pagesize=letter)
     ancho, alto = letter
 
-    # ENCABEZADO
-    c.setFillColorRGB(0, 0.2, 0.4)
-    c.rect(0, alto - 80, ancho, 80, fill=True, stroke=False)
-    c.setFillColorRGB(1, 1, 1)
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(30, alto - 40, "TELEMÁTICA SAS - REPORTE DE INVENTARIO")
-    c.setFont("Helvetica", 11)
-    tipo_texto = "General" if inventario.tipo == "general" else "Cíclico"
-    c.drawString(30, alto - 65, f"{tipo_texto} | {inventario.bodega}")
+    # ENCABEZADO ESTILO TELEMÁTICA
+    # Borde exterior del encabezado
+    c.setStrokeColorRGB(0, 0.2, 0.5)
+    c.setLineWidth(1.5)
+    c.rect(30, alto - 100, ancho - 60, 80, fill=False, stroke=True)
 
-    # INFORMACIÓN
-    c.setFillColorRGB(0, 0, 0)
-    y = alto - 110
+    # Logo
+    logo_path = os.path.join('static', 'img', 'logo_telematica.jpg')
+    if os.path.exists(logo_path):
+        c.drawImage(logo_path, 35, alto - 97, width=100, height=70, preserveAspectRatio=True, mask='auto')
+
+    # Línea vertical después del logo
+    c.line(140, alto - 20, 140, alto - 100)
+
+    # Título centrado
+    c.setFillColorRGB(0, 0.2, 0.5)
     c.setFont("Helvetica-Bold", 11)
+    titulo = "REPORTE DE INVENTARIO DE EQUIPOS"
+    centro = (140 + (ancho - 170)) / 2
+    tipo_texto = "General" if inventario.tipo == "general" else "Cíclico"
+    c.drawCentredString(centro, alto - 50, titulo)
+    c.setFont("Helvetica", 9)
+    c.drawCentredString(centro, alto - 65, f"Inventario {tipo_texto} - {inventario.bodega}")
+
+    # Línea vertical antes de código/versión
+    c.line(ancho - 170, alto - 20, ancho - 170, alto - 100)
+
+    # Código y versión
+    c.setFillColorRGB(0, 0, 0)
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(ancho - 165, alto - 35, "Código: INV-001")
+    c.line(ancho - 170, alto - 55, ancho - 30, alto - 55)
+    c.drawString(ancho - 165, alto - 70, f"Revisado: {inventario.fecha.strftime('%B %Y')}")
+    c.line(ancho - 170, alto - 75, ancho - 30, alto - 75)
+    c.setFont("Helvetica", 8)
+    c.drawString(ancho - 165, alto - 88, "Versión: 01")
+
+    # INFORMACIÓN DEL INVENTARIO
+    c.setFillColorRGB(0, 0, 0)
+    y = alto - 125
+    c.setFont("Helvetica-Bold", 10)
     c.drawString(30, y, "INFORMACIÓN DEL INVENTARIO")
     c.line(30, y - 5, ancho - 30, y - 5)
 
-    y -= 25
-    c.setFont("Helvetica", 10)
+    y -= 22
+    c.setFont("Helvetica", 9)
     c.drawString(30, y, f"Responsable: {inventario.responsable}")
     c.drawString(300, y, f"Ejecutado por: {inventario.ejecutado_por}")
-    y -= 18
+    y -= 16
     c.drawString(30, y, f"Fecha: {inventario.fecha.strftime('%d/%m/%Y %H:%M')}")
     c.drawString(300, y, f"Estado: {'Finalizado' if inventario.estado == 'finalizado' else 'En proceso'}")
-    y -= 18
+    y -= 16
     if inventario.localizacion:
         c.drawString(30, y, f"Localización: {inventario.localizacion}")
-        y -= 18
+        y -= 16
     if inventario.observaciones:
         c.drawString(30, y, f"Observaciones: {inventario.observaciones}")
-        y -= 18
+        y -= 16
 
     # RESUMEN
-    y -= 15
-    c.setFont("Helvetica-Bold", 11)
+    y -= 10
+    c.setFont("Helvetica-Bold", 10)
     c.drawString(30, y, "RESUMEN")
     c.line(30, y - 5, ancho - 30, y - 5)
-    y -= 25
-    c.setFont("Helvetica", 10)
+    y -= 20
+    c.setFont("Helvetica", 9)
     c.drawString(30, y, f"Total esperados: {len(encontrados) + len(faltantes)}")
     c.drawString(200, y, f"Encontrados: {len(encontrados)}")
-    c.drawString(350, y, f"Faltantes: {len(faltantes)}")
+    c.drawString(340, y, f"Faltantes: {len(faltantes)}")
     c.drawString(460, y, f"Sobrantes: {len(sobrantes)}")
 
     def dibujar_tabla(titulo, items_lista, color_rgb, y_pos):
         if not items_lista:
             return y_pos
-        y_pos -= 25
-        c.setFont("Helvetica-Bold", 11)
+        y_pos -= 20
+        c.setFont("Helvetica-Bold", 10)
         c.setFillColorRGB(*color_rgb)
         c.drawString(30, y_pos, titulo)
         c.setFillColorRGB(0, 0, 0)
         c.line(30, y_pos - 5, ancho - 30, y_pos - 5)
-        y_pos -= 20
-        c.setFont("Helvetica", 9)
+
+        y_pos -= 18
+        c.setFont("Helvetica-Bold", 8)
+        c.setFillColorRGB(0.9, 0.9, 0.9)
+        c.rect(30, y_pos - 4, ancho - 60, 16, fill=True, stroke=False)
+        c.setFillColorRGB(0, 0, 0)
+        c.drawString(35, y_pos, "#")
+        c.drawString(55, y_pos, "Serial")
+        c.drawString(180, y_pos, "Descripción")
+        c.drawString(370, y_pos, "Bodega")
+        c.drawString(490, y_pos, "Ubicación")
+
+        y_pos -= 16
+        c.setFont("Helvetica", 8)
         for i, item in enumerate(items_lista, 1):
             if y_pos < 50:
                 c.showPage()
                 y_pos = alto - 50
-            c.drawString(30, y_pos, f"{i}.")
-            c.drawString(55, y_pos, item.serial)
-            y_pos -= 15
-        return y_pos
 
+            equipo = Equipo.query.filter_by(serial=item.serial).first()
+            descripcion = equipo.descripcion[:25] + '...' if equipo and equipo.descripcion and len(equipo.descripcion) > 25 else (equipo.descripcion if equipo and equipo.descripcion else '-')
+            bodega = equipo.bodega[:20] + '...' if equipo and equipo.bodega and len(equipo.bodega) > 20 else (equipo.bodega if equipo and equipo.bodega else '-')
+            ubicacion = equipo.localizacion[:15] + '...' if equipo and equipo.localizacion and len(equipo.localizacion) > 15 else (equipo.localizacion if equipo and equipo.localizacion else '-')
+
+            if i % 2 == 0:
+                c.setFillColorRGB(0.95, 0.95, 0.95)
+            c.rect(30, y_pos - 4, ancho - 60, 14, fill=True, stroke=False)
+            c.setFillColorRGB(0, 0, 0)
+
+            c.drawString(35, y_pos, str(i))
+            c.drawString(55, y_pos, item.serial[:20])
+            c.drawString(180, y_pos, descripcion)
+            c.drawString(370, y_pos, bodega)
+            c.drawString(490, y_pos, ubicacion)
+            y_pos -= 14
+        return y_pos
     y = dibujar_tabla(f"FALTANTES ({len(faltantes)})", faltantes, (0.7, 0.1, 0.1), y)
     y = dibujar_tabla(f"SOBRANTES ({len(sobrantes)})", sobrantes, (0.6, 0.4, 0), y)
     y = dibujar_tabla(f"ENCONTRADOS ({len(encontrados)})", encontrados, (0.1, 0.5, 0.2), y)
@@ -652,4 +720,3 @@ def pdf_inventario(id):
     buffer.seek(0)
     return send_file(buffer, mimetype='application/pdf',
                      download_name=f'inventario_{inventario.id}_{inventario.bodega}.pdf')
-
