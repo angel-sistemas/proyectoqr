@@ -62,6 +62,7 @@ class Equipo(db.Model):
     codigo_bodega   = db.Column(db.String(20))
     imagen_path     = db.Column(db.String(255))
     updated_at      = db.Column(db.DateTime, default=datetime.now)
+    cantidad        = db.Column(db.Integer, default=1)
 
     def _repr_(self):
         return f'<Equipo {self.serial}>'
