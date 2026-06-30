@@ -58,15 +58,24 @@
         </h3>
         <div style="display: flex; flex-direction: column; gap: 10px;">
             <input type="text" id="input-serial"
-                   placeholder="Escanea o escribe el serial..."
-                   style="padding: 12px; border: 2px solid #003366; border-radius: 8px;
-                          font-size: 14px; font-family: monospace;"
-                   onkeypress="if(event.key==='Enter') escanear()"
-                   autofocus>
+                placeholder="Escanea o escribe el serial..."
+                style="padding: 12px; border: 2px solid #003366; border-radius: 8px;
+                    font-size: 14px; font-family: monospace;"
+                onkeypress="if(event.key==='Enter') escanear()"
+                autofocus>
+    
+            <div id="div-cantidad" style="display: none;">
+                <label style="color: #003366; font-size: 13px; font-weight: bold; display: block; margin-bottom: 6px;">
+                    Cantidad física encontrada:
+                </label>
+                <input type="number" id="input-cantidad" min="0" value="1"
+                    style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
+            </div>
+
             <button onclick="escanear()"
                     style="background: #003366; color: white; padding: 12px; border: none;
-                           border-radius: 8px; cursor: pointer; font-size: 14px;
-                           display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        border-radius: 8px; cursor: pointer; font-size: 14px;
+                        display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <i class="fas fa-search"></i> Registrar
             </button>
         </div>
@@ -106,12 +115,13 @@
     function escanear() {
         const input = document.getElementById('input-serial');
         const serial = input.value.trim().toUpperCase();
+        const cantidad = document.getElementById('input-cantidad').value || 1;
         if (!serial) return;
 
         fetch('/inventario/{{ inventario.id }}/ejecutar', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'serial=' + encodeURIComponent(serial)
+            body: `serial=${encodeURIComponent(serial)}&cantidad_fisica=${cantidad}`
         })
         .then(r => r.json())
         .then(data => {
@@ -122,10 +132,8 @@
             if (data.status === 'ok') {
                 msg.style.background = '#d4edda';
                 msg.style.color = '#155724';
-                // Quitar de faltantes
                 const el = document.getElementById('item-' + serial);
                 if (el) el.remove();
-                // Actualizar contador
                 let f = parseInt(document.getElementById('faltantes').innerText);
                 let e = parseInt(document.getElementById('encontrados').innerText);
                 document.getElementById('faltantes').innerText = Math.max(0, f - 1);
@@ -133,12 +141,15 @@
             } else if (data.status === 'sobrante') {
                 msg.style.background = '#fff3cd';
                 msg.style.color = '#856404';
-            } else {
-                msg.style.background = '#f8d7da';
-                msg.style.color = '#721c24';
             }
 
-            // Agregar a últimos escaneados
+            if (data.es_consumible) {
+                document.getElementById('div-cantidad').style.display = 'block';
+            } else {
+                document.getElementById('div-cantidad').style.display = 'none';
+                document.getElementById('input-cantidad').value = 1;
+            }
+
             ultimos.unshift({serial, status: data.status});
             if (ultimos.length > 10) ultimos.pop();
             actualizarUltimos();

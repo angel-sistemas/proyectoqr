@@ -502,24 +502,42 @@ def ejecutar_inventario(id):
     
     if request.method == 'POST':
         serial = request.form.get('serial', '').strip().upper()
+        cantidad_fisica = int(request.form.get('cantidad_fisica', 1))
+    
         if serial:
             item = ItemInventario.query.filter_by(
                 inventario_id=id, serial=serial
             ).first()
+        
+            equipo = Equipo.query.filter_by(serial=serial).first()
+            cantidad_sistema = equipo.cantidad if equipo and equipo.cantidad else 1
+        
             if item:
                 item.encontrado = True
+                item.cantidad_encontrada = cantidad_fisica
                 db.session.commit()
-                return {'status': 'ok', 'mensaje': f'Serial {serial} encontrado ✅'}
+            
+                if cantidad_sistema == 1:
+                    return {'status': 'ok', 'mensaje': f'Serial {serial} encontrado ✅', 'es_consumible': False}
+                else:
+                    diferencia = cantidad_fisica - cantidad_sistema
+                    if diferencia == 0:
+                        msg = f'Serial {serial} ✅ Cantidad correcta: {cantidad_fisica}'
+                    elif diferencia > 0:
+                        msg = f'Serial {serial} ⚠️ Sobrante: sistema={cantidad_sistema}, físico={cantidad_fisica}'
+                    else:
+                        msg = f'Serial {serial} ⚠️ Faltante: sistema={cantidad_sistema}, físico={cantidad_fisica}'
+                    return {'status': 'ok', 'mensaje': msg, 'es_consumible': True}
             else:
-                # Serial no esperado - sobrante
                 nuevo = ItemInventario()
-                nuevo.inventario_id = id
-                nuevo.serial        = serial
-                nuevo.encontrado    = True
-                nuevo.esperado      = False
+                nuevo.inventario_id     = id
+                nuevo.serial            = serial
+                nuevo.encontrado        = True
+                nuevo.esperado          = False
+                nuevo.cantidad_encontrada = cantidad_fisica
                 db.session.add(nuevo)
                 db.session.commit()
-                return {'status': 'sobrante', 'mensaje': f'Serial {serial} no estaba en la lista ⚠️'}
+                return {'status': 'sobrante', 'mensaje': f'Serial {serial} no estaba en la lista ⚠️', 'es_consumible': False}
 
     items = ItemInventario.query.filter_by(inventario_id=id).all()
     encontrados = sum(1 for i in items if i.encontrado and i.esperado)
@@ -694,7 +712,9 @@ def pdf_inventario(id):
             if y_pos < 50:
                 c.showPage()
                 y_pos = alto - 50
-
+                c.setFont("Helvetica", 8)
+                c.setFillColorRGB(0, 0, 0)
+                
             equipo = Equipo.query.filter_by(serial=item.serial).first()
             descripcion = equipo.descripcion[:25] + '...' if equipo and equipo.descripcion and len(equipo.descripcion) > 25 else (equipo.descripcion if equipo and equipo.descripcion else '-')
             bodega = equipo.bodega[:20] + '...' if equipo and equipo.bodega and len(equipo.bodega) > 20 else (equipo.bodega if equipo and equipo.bodega else '-')
@@ -702,7 +722,7 @@ def pdf_inventario(id):
 
             if i % 2 == 0:
                 c.setFillColorRGB(0.95, 0.95, 0.95)
-            c.rect(30, y_pos - 4, ancho - 60, 14, fill=True, stroke=False)
+                c.rect(30, y_pos - 4, ancho - 60, 14, fill=True, stroke=False)
             c.setFillColorRGB(0, 0, 0)
 
             c.drawString(35, y_pos, str(i))

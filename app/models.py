@@ -89,3 +89,4 @@ class ItemInventario(db.Model):
     encontrado     = db.Column(db.Boolean, default=False)
     esperado       = db.Column(db.Boolean, default=True)
     observaciones  = db.Column(db.Text)
+    cantidad_encontrada = db.Column(db.Integer, default=0)
