@@ -155,7 +155,10 @@ def procesar_excel(archivo_bytes, app):
                     equipo.bodega          = limpiar(fila.get('nombrE_BODEGA', ''))
                     equipo.centro_costos   = limpiar(fila.get('centrodecostos', ''))
                     equipo.codigo_bodega   = limpiar(fila.get('coD_BODEGA', ''))
-                    equipo.cantidad        = int(limpiar(fila.get('cantidad', 1)) or 1)
+                    try:
+                        equipo.cantidad = int(float(limpiar(fila.get('cantidad', 1)) or 1))
+                    except:
+                        equipo.cantidad = 1
                     equipo.observaciones   = limpiar(fila.get('observaciones', ''))
                     db.session.add(equipo)
                 db.session.commit()
