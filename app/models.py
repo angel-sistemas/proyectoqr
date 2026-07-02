@@ -32,16 +32,16 @@ class Usuario(UserMixin, db.Model):
     def tiene_permiso(self, permiso_nombre):
         if not self.rol_id:
             return False
-        permiso = Permiso.query.filter_by(nombre=permiso_nombre).first()
-        print(f"buscando permiso: {permiso_nombre}, encontrado: {permiso}")
-        if not permiso:
-            return False
-        rp = RolPermiso.query.filter_by(
-            rol_id=self.rol_id,
-            permiso_id=permiso.id
-        ).first()
-        print(f"RolPermiso encontrado: {rp}")
-        return rp is not None
+    
+    # Caché de permisos en el objeto usuario
+        if not hasattr(self, '_permisos_cache'):
+        # Cargar todos los permisos del rol de una sola vez
+            rps = RolPermiso.query.filter_by(rol_id=self.rol_id).all()
+            permisos_ids = [rp.permiso_id for rp in rps]
+            permisos = Permiso.query.filter(Permiso.id.in_(permisos_ids)).all()
+            self._permisos_cache = {p.nombre for p in permisos}
+    
+        return permiso_nombre in self._permisos_cache
 
 class Equipo(db.Model):
     __tablename__ = 'equipos'
