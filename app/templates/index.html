@@ -82,6 +82,7 @@
                 <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Descripción</th>
                 <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Marca</th>
                 <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Estado</th>
+                <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Observaciones</th>
                 {% if current_user.tiene_permiso('ver_equipo') %}
                 <th style="padding: 13px 15px; text-align: left; font-size: 13px;">Acciones</th>
                 {% endif %}
@@ -121,6 +122,9 @@
                         <span style="background: #f0f0f0; color: #555; padding: 3px 10px;
                             border-radius: 20px; font-size: 12px;">{{ equipo.estado or '-' }}</span>
                     {% endif %}
+                </td>
+                <td style="padding: 12px 15px; font-size: 13px; color: #555;">
+                    {{ equipo.observaciones if equipo.observaciones else '-' }}
                 </td>
                 {% if current_user.tiene_permiso('ver_equipo') %}
                 <td style="padding: 12px 15px;">

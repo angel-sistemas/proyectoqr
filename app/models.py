@@ -63,6 +63,7 @@ class Equipo(db.Model):
     imagen_path     = db.Column(db.String(255))
     updated_at      = db.Column(db.DateTime, default=datetime.now)
     cantidad        = db.Column(db.Integer, default=1)
+    observaciones = db.Column(db.Text)
 
     def _repr_(self):
         return f'<Equipo {self.serial}>'

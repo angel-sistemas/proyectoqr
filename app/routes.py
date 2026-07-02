@@ -155,6 +155,8 @@ def procesar_excel(archivo_bytes, app):
                     equipo.bodega          = limpiar(fila.get('nombrE_BODEGA', ''))
                     equipo.centro_costos   = limpiar(fila.get('centrodecostos', ''))
                     equipo.codigo_bodega   = limpiar(fila.get('coD_BODEGA', ''))
+                    equipo.cantidad        = int(limpiar(fila.get('cantidad', 1)) or 1)
+                    equipo.observaciones   = limpiar(fila.get('observaciones', ''))
                     db.session.add(equipo)
                 db.session.commit()
                 print(f"✅ Procesadas {min(i + chunk_size, total)}/{total} filas")
